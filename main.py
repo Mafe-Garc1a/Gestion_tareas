@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.router import users
 from app.router import fincas
+from app.router import metodo_pago
 from app.router import auth
 
 app = FastAPI()
@@ -10,6 +11,7 @@ app = FastAPI()
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/access", tags=["login"])
 app.include_router(fincas.router, prefix="/fincas", tags=["fincas"])
+app.include_router(metodo_pago.router, prefix="/metodo_pago", tags=["metodo_pago"])
 
 # Configuración de CORS para permitir todas las solicitudes desde cualquier origen
 app.add_middleware(
