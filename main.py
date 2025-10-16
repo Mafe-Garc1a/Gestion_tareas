@@ -6,18 +6,18 @@ from app.router import auth
 
 app = FastAPI()
 
-# Incluir en el objeto app los routers
+
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/access", tags=["login"])
-app.include_router(fincas.router, prefix="/fincas", tags=["fincas"])
 
-# Configuración de CORS para permitir todas las solicitudes desde cualquier origen
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir solicitudes desde cualquier origen
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Permitir estos métodos HTTP
-    allow_headers=["*"],  # Permitir cualquier encabezado en las solicitudes
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  
+    allow_headers=["*"],  
 )
 
 @app.get("/")
