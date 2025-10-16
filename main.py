@@ -12,6 +12,8 @@ from app.router import metodo_pago
 from app.router import detalle_salvamento
 from app.router import auth
 
+app = FastAPI()
+
 app.include_router(auth.router, prefix="/access", tags=["login"])
 
 app.include_router(modulos.router, prefix="/modulos", tags=["modulos"])
