@@ -10,7 +10,9 @@ from app.crud import roles as crud_roles
 from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter()
-modulo = 6
+
+modulo = 1 
+
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
 def create_rol(    
     rol: RolCreate,
