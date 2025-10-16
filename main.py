@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.router import users
-from app.router import fincas
 from app.router import auth
 
 app = FastAPI()
