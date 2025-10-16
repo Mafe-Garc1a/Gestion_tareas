@@ -3,12 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.router import users
 from app.router import fincas
 from app.router import auth
-
+from app.router import modulos  # Importar el nuevo ruter de modulos
 app = FastAPI()
 
 # Incluir en el objeto app los routers
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/access", tags=["login"])
+app.include_router(modulos.router, prefix="/modulos", tags=["modulos"])  # Nuevo ruter de modulos
 
 
 # Configuración de CORS para permitir todas las solicitudes desde cualquier origen
