@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 # ///////////
-modulo = 4 # ID del módulo de métodos de pago (cambiar)
+modulo = 8 # ID del módulo de métodos de pago (cambiar)
 # ///////////
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
 def create_metodoPago(    
