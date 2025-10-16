@@ -11,7 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter()
 
-modulo = 1 
+modulo = 3
 
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
 def create_rol(    
