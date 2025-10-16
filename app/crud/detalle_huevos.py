@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional
+from fastapi import HTTPException
 import logging
 
 from app.schemas.detalle_huevos import DetalleHuevosCreate, DetalleHuevosUpdate
@@ -12,7 +13,7 @@ def create_detalle_huevos(db: Session, detalle_h: DetalleHuevosCreate) -> Option
     try:
         stock_disponible = db.execute(text("SELECT cantidad_disponible FROM stock WHERE id_producto = :id_producto"), {"id_producto": detalle_h.id_producto}).mappings().first()
         if not stock_disponible or stock_disponible['cantidad_disponible'] < detalle_h.cantidad:
-            raise Exception("Error validacion")
+            raise HTTPException(status_code=400, detail="Stock insuficiente para completar la operación")
 
         sentencia = text("""
             INSERT INTO detalle_huevos(
@@ -67,10 +68,10 @@ def update_detalle_huevos_by_id(db: Session, detalle_id: int, detalle_h: Detalle
             """), {"id": id_producto_nuevo}).mappings().first()
 
             if not stock_nuevo:
-                raise Exception("Error validacion")
+                raise HTTPException(status_code=400, detail="Error validacion")
             
             if stock_nuevo['cantidad_disponible'] < cantidad_nueva:
-                raise Exception("Error validacion")
+                raise HTTPException(status_code=400, detail="Error validacion")
         else:
             diferencia_cantidad = cantidad_nueva - cantidad_anterior
             if diferencia_cantidad > 0:
@@ -79,7 +80,7 @@ def update_detalle_huevos_by_id(db: Session, detalle_id: int, detalle_h: Detalle
                 """), {"id": id_producto_nuevo}).mappings().first()
 
                 if not stock_actual or stock_actual['cantidad_disponible'] < diferencia_cantidad:
-                    raise Exception("Error validacion")
+                    raise HTTPException(status_code=400, detail="Error validacion")
                 
         if id_producto_nuevo != id_producto_anterior:
             db.execute(text("""
