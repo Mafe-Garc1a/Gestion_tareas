@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.router import modulos
 from app.router import permisos
 from app.router import roles
-from app.router import usuarios
+from app.router import users
 from app.router import ventas
 from app.router import tareas
 from app.router import detalle_huevos
