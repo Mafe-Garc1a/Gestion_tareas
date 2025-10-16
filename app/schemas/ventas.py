@@ -18,4 +18,5 @@ class VentaUpdate(BaseModel):
 class VentaOut(VentaBase):
     id_venta: int
     fecha_hora: datetime
+    # este campo es calculado
     total: Decimal

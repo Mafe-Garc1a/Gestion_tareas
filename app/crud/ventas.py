@@ -46,7 +46,17 @@ def get_all_ventas(db: Session):
                         ventas.tipo_pago, 
                         ventas.id_venta, 
                         CONVERT_TZ(ventas.fecha_hora, '+00:00', '-05:00') AS fecha_hora,
-                        ventas.total
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                            FROM detalle_huevos 
+                            WHERE detalle_huevos.id_venta = ventas.id_venta
+                        ), 0)
+                        +
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                            FROM detalle_salvamento 
+                            WHERE detalle_salvamento.id_venta = ventas.id_venta
+                        ), 0) AS total
                     FROM ventas
                 """)
         result = db.execute(query).mappings().all()
@@ -64,7 +74,17 @@ def get_ventas_by_fecha(db: Session, fecha: date):
                         ventas.tipo_pago, 
                         ventas.id_venta, 
                         CONVERT_TZ(ventas.fecha_hora, '+00:00', '-05:00') AS fecha_hora,
-                        ventas.total
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                            FROM detalle_huevos 
+                            WHERE detalle_huevos.id_venta = ventas.id_venta
+                        ), 0)
+                        +
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                            FROM detalle_salvamento 
+                            WHERE detalle_salvamento.id_venta = ventas.id_venta
+                        ), 0) AS total
                     FROM ventas
                     WHERE DATE(fecha_hora) = :date
                 """)
@@ -84,7 +104,17 @@ def get_ventas_by_usuario(db: Session, usuario_id: id):
                         ventas.tipo_pago, 
                         ventas.id_venta, 
                         CONVERT_TZ(ventas.fecha_hora, '+00:00', '-05:00') AS fecha_hora,
-                        ventas.total
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                            FROM detalle_huevos 
+                            WHERE detalle_huevos.id_venta = ventas.id_venta
+                        ), 0)
+                        +
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                            FROM detalle_salvamento 
+                            WHERE detalle_salvamento.id_venta = ventas.id_venta
+                        ), 0) AS total
                     FROM ventas
                     WHERE id_usuario = :usuario_id
                 """)
@@ -103,9 +133,19 @@ def get_venta_by_id(db: Session, venta_id: int):
                         ventas.tipo_pago, 
                         ventas.id_venta, 
                         CONVERT_TZ(ventas.fecha_hora, '+00:00', '-05:00') AS fecha_hora,
-                        ventas.total
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                            FROM detalle_huevos 
+                            WHERE detalle_huevos.id_venta = ventas.id_venta
+                        ), 0)
+                        +
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                            FROM detalle_salvamento 
+                            WHERE detalle_salvamento.id_venta = ventas.id_venta
+                        ), 0) AS total
                     FROM ventas
-                    WHERE id_venta = :venta_id
+                    WHERE ventas.id_venta = :venta_id
                 """)
         result = db.execute(query, {"venta_id": venta_id}).mappings().first()
         return result
