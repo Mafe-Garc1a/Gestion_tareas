@@ -92,24 +92,7 @@ def delete_detalle_huevos(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.delete("/by-id-venta/{id_venta}")
-def delete_detalle_huevos(
-    id_venta: int,
-    db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user)
-):
-    try:
-        id_rol = user_token.id_rol
-        modulo=7
-        if not verify_permissions(db, id_rol, modulo, 'actualizar'):
-            raise HTTPException(status_code=401, detail="usuario no autorizado")
 
-        success = crud_detalles_huevos.delete_all_detalle_huevos_by_id_venta(db, id_venta)
-        if not success:
-            raise HTTPException(status_code=400, detail="No se pudo eliminar los detalles de la venta")
-        return {"message": "Detalles de venta eliminados correctamente"}
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=str(e))
     
     
 
