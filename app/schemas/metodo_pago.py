@@ -12,6 +12,9 @@ class MetodoPagoCreate(MetodoPagoBase):
 class MetodoPagoUpdate(BaseModel):
     nombre: Optional[str] = Field(default=None, min_length=1, max_length=30)
     descripcion: Optional[str] = Field(default=None, max_length=100)
+
+
+class MetodoPagoEstado(BaseModel):
     estado: Optional[bool] = None
 
 class MetodoPagoOut(MetodoPagoBase):

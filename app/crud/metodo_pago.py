@@ -77,3 +77,18 @@ def update_metodoPago_by_id(db: Session, id: int, metodoPago: MetodoPagoUpdate) 
         db.rollback()
         logger.error(f"Error al actualizar el metodo de pago {id}: {e}")
         raise Exception("Error de base de datos al actualizar el metodo de pago")
+    
+def change_metodoPago_status(db: Session, id: int, nuevo_estado: bool) -> bool:
+    try:
+        sentencia = text("""
+            UPDATE metodo_pago
+            SET estado = :estado
+            WHERE id_tipo = :id_tipo
+        """)
+        result = db.execute(sentencia, {"estado": nuevo_estado, "id_tipo": id})
+        db.commit()
+        return result.rowcount > 0
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al cambiar el estado del metodo de pago {id}: {e}")
+        raise Exception("Error de base de datos al cambiar el estado del metodo de pago")
