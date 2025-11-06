@@ -161,4 +161,35 @@ def delete_detalle_huevos_by_id(db: Session, detalle_id: int):
         db.rollback()
         logger.error(f"Error al eliminar detalle_huevos {detalle_id}: {e}")
         raise Exception("Error de base de datos al eliminar el detalle_huevos")
+    
+def delete_all_detalle_huevos_by_id_venta(db: Session, id_venta: int):
+    try:
+        data = db.execute(text("""
+            SELECT id_detalle, id_producto, cantidad
+            FROM detalle_huevos 
+            WHERE id_venta = :id_venta """), {'id_venta': id_venta}).mappings().all()
+        
+        for detalle in data:
+            db.execute(text("""
+                DELETE FROM detalle_huevos 
+                WHERE id_detalle = :id_detalle
+            """), {"id_detalle": detalle['id_detalle']})
+            
+            # Actualizar el stock
+            db.execute(text("""
+                UPDATE stock 
+                SET cantidad_disponible = cantidad_disponible + :cantidad 
+                WHERE id_producto = :id_producto
+            """), {
+                "cantidad": detalle['cantidad'],
+                "id_producto": detalle['id_producto']
+            })
+
+        db.commit()
+            
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al eliminar detalles de venta {id_venta}: {e}")
+        raise Exception("Error de base de datos al eliminar los detalles de la venta")
 
