@@ -20,9 +20,9 @@ def create_user(
     try:
         id_rol = user_token.id_rol
         if (user.id_rol ==  1 or user.id_rol == 2):
-            modulo = 2
+            modulo = 10
         else:
-            modulo = 1
+            modulo = 4
         
         if not verify_permissions(db, id_rol, modulo, 'insertar'):
             raise HTTPException(status_code=401, detail= 'Usuario no autorizado')
@@ -87,3 +87,28 @@ def update_user(
         return {"message": "Usuario actualizado correctamente"}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/cambiar-estado/{user_id}", status_code=status.HTTP_200_OK)
+def change_user_status(
+    user_id: int,
+    nuevo_estado: bool,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        # Verificar permisos del usuario
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, 'actualizar'):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+
+        success = crud_users.change_user_status(db, user_id, nuevo_estado)
+        if not success:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        return {"message": f"Estado del usuario actualizado a {nuevo_estado}"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))

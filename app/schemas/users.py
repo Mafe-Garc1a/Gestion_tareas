@@ -17,7 +17,9 @@ class UserUpdate(BaseModel):
     email: Optional [EmailStr] = None
     telefono: Optional [str] = Field(default=None, min_length=7, max_length=15)
     documento: Optional [str] = Field(default=None, min_length=8, max_length=20)
-    estado: Optional [bool] = None
+    
+class UserEstado(BaseModel):
+    estado: Optional[bool] = None
 
 class UserOut(UserBase):
     id_usuario: int

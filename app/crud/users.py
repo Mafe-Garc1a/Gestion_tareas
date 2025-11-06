@@ -10,11 +10,6 @@ logger = logging.getLogger(__name__)
 
 def create_user(db: Session, user: UserCreate) -> Optional[bool]:
     try:
-        
-        print(user.pass_hash)
-        pass_encript = get_hashed_password(user.pass_hash)
-        print(pass_encript)
-        user.pass_hash = pass_encript
         sentencia = text("""
             INSERT INTO usuarios (
                 nombre, documento, id_rol,
@@ -140,6 +135,23 @@ def get_user_by_id(db: Session, id: int):
     
 
 
+    
+def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool:
+    try:
+        sentencia = text("""
+            UPDATE usuarios
+            SET estado = :estado
+            WHERE id_usuario = :id_usuario
+        """)
+        result = db.execute(sentencia, {"estado": nuevo_estado, "id_usuario": id_usuario})
+        db.commit()
+
+        return result.rowcount > 0
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al cambiar el estado del usuario {id_usuario}: {e}")
+        raise Exception("Error de base de datos al cambiar el estado del usuario")
 
 
 
