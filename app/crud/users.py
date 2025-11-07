@@ -133,9 +133,30 @@ def get_user_by_id(db: Session, id: int):
         logger.error(f"Error al obtener usuario por id: {e}")
         raise Exception("Error de base de datos al obtener el usuario")
     
+def get_user_by_document_number(db: Session, document: str):
+    try:
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+                     FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
+                     WHERE usuarios.documento = :document
+                """)
+        result = db.execute(query, {"document": document}).mappings().first()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener usuario por su documento: {e}")
+        raise Exception("Error de base de datos al obtener el usuario")
 
+def get_user_by_role(db: Session, role: str):
+    try:
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+                     FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
+                     WHERE LOWER(roles.nombre_rol) = LOWER(:role)
+                """)
+        result = db.execute(query, {"role": role}).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener usuario por rol: {e}")
+        raise Exception("Error de base de datos al obtener los usuarios")
 
-    
 def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool:
     try:
         sentencia = text("""
@@ -152,6 +173,8 @@ def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool
         db.rollback()
         logger.error(f"Error al cambiar el estado del usuario {id_usuario}: {e}")
         raise Exception("Error de base de datos al cambiar el estado del usuario")
+    
+
 
 
 

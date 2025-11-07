@@ -54,6 +54,8 @@ def get_user(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
+    
 @router.get("/all-except-admins", response_model=List[UserOut])
 def get_users(
     db: Session = Depends(get_db),
@@ -88,6 +90,43 @@ def update_user(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/by-document", response_model=UserOut)
+def get_user(
+    document: str,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol=user_token.id_rol
+
+        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
+            raise HTTPException(status_code=401, detail="usuario no autorizado")
+
+        user = crud_users.get_user_by_document_number(db, document)
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        return user
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/by-role", response_model=List[UserOut])
+def get_user(
+    role: str,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol=user_token.id_rol
+
+        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
+            raise HTTPException(status_code=401, detail="usuario no autorizado")
+
+        user = crud_users.get_user_by_role(db, role)
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        return user
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/cambiar-estado/{user_id}", status_code=status.HTTP_200_OK)
 def change_user_status(
