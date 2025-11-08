@@ -167,7 +167,7 @@ def delete_all_detalle_huevos_by_id_venta(db: Session, id_venta: int):
         # Obtener los detalles de la venta
         data = db.execute(text("""
             SELECT id_detalle, id_producto, cantidad
-            FROM detalle_salvamento
+            FROM detalle_huevos
             WHERE id_venta = :id_venta
         """), {'id_venta': id_venta}).mappings().all()
 
@@ -179,15 +179,15 @@ def delete_all_detalle_huevos_by_id_venta(db: Session, id_venta: int):
         # Eliminar cada detalle y actualizar la tabla salvamento
         for detalle in data:
             db.execute(text("""
-                DELETE FROM detalle_salvamento
+                DELETE FROM detalle_huevos
                 WHERE id_detalle = :id_detalle
             """), {"id_detalle": detalle['id_detalle']})
 
             # Actualizar el stock de gallinas en la tabla salvamento
             db.execute(text("""
-                UPDATE salvamento
-                SET cantidad_gallinas = cantidad_gallinas + :cantidad 
-                WHERE id_salvamento = :id_producto
+                UPDATE stock
+                SET cantidad_disponible = cantidad_disponible + :cantidad 
+                WHERE id_producto = :id_producto
             """), {
                 "cantidad": detalle['cantidad'],
                 "id_producto": detalle['id_producto']
