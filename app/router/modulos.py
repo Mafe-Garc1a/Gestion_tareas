@@ -85,3 +85,27 @@ def update_modulo(
         return {"message": "Módulo actualizado correctamente"}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.put("/cambiar-estado/{modulo_id}", status_code=status.HTTP_200_OK)
+def change_module_status(
+    modulo_id: int,
+    activo: bool,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, 'actualizar'):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+
+        success = crud_modulos.change_modulo_status(db, modulo_id, activo)
+        if not success:
+            raise HTTPException(status_code=404, detail="Módulo no encontrado")
+
+        estado_texto = "activado" if activo else "desactivado"
+        return {"message": f"Módulo {estado_texto} correctamente"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
