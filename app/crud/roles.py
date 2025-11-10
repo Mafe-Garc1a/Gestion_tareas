@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import Optional
 import logging
-from app.schemas.roles import RolCreate, RolUpdate 
+from app.schemas.roles import RolCreate, RolUpdate, RolEstado
 from sqlalchemy.exc import SQLAlchemyError
 
 logger = logging.getLogger(__name__)
@@ -13,9 +13,9 @@ def create_rol(db: Session, rol: RolCreate) -> Optional[bool]:
     try:
         sentencia = text("""
             INSERT INTO roles (
-                nombre_rol, descripcion
+                nombre_rol, descripcion, estado
             ) VALUES (
-                :nombre_rol, :descripcion
+                :nombre_rol, :descripcion, :estado
             )
         """)
         db.execute(sentencia, rol.model_dump())
@@ -30,7 +30,7 @@ def create_rol(db: Session, rol: RolCreate) -> Optional[bool]:
 def get_rol_by_nombre(db: Session, nombre: str):
     try:
         query = text("""
-                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion
+                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion, roles.estado
                     FROM roles 
                     WHERE nombre_rol = :name
                 """)
@@ -44,7 +44,7 @@ def get_rol_by_nombre(db: Session, nombre: str):
 def get_rol_by_id(db: Session, rol_id: int):
     try:
         query = text("""
-                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion
+                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion, roles.estado
                     FROM roles 
                     WHERE id_rol = :rol_id
                 """)
@@ -58,7 +58,7 @@ def get_rol_by_id(db: Session, rol_id: int):
 def get_all_roles(db: Session):
     try:
         query = text("""
-                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion
+                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion, roles.estado
                     FROM roles
                 """)
         result = db.execute(query).mappings().all()
@@ -94,21 +94,24 @@ def update_rol_by_id(db: Session, rol_id: int, rol: RolUpdate) -> Optional[bool]
         logger.error(f"Error al actualizar usuario {rol_id}: {e}")
         raise Exception("Error de base de datos al actualizar la rol")
     
-
-def delete_rol_by_id(db: Session, rol_id: int) -> Optional[bool]:
+    
+def cambiar_rol_estado(db: Session, id_rol: int, nuevo_estado: bool) -> bool:
     try:
         sentencia = text("""
-                    DELETE 
-                    FROM roles
-                    WHERE id_rol = :id_rol
-                """)
-        result = db.execute(sentencia, {'id_rol': rol_id})
-        db.commit()
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Rol no encontrado")
-        return True
+            UPDATE roles
+            SET estado = :nuevo_estado
+            WHERE id_rol = :id_rol              
+        """)
+        result = db.execute(sentencia, {"nuevo_estado": nuevo_estado, "id_rol": id_rol})
+        
+        # Verificar si alguna fila fue afectada
+        if result.rowcount > 0:
+            db.commit()
+            return True
+        else:
+            db.rollback()  
+            return False
     except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Error al eliminar rol {rol_id}: {e}")
-        raise Exception("Error de base de datos al eliminar el rol")
-    
+        db.rollback() 
+        logger.error(f"Error al cambiar el estado del rol {id_rol}: {e}")
+        raise Exception("Error de base de datos al cambiar el estado del rol")

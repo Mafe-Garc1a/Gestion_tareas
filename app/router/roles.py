@@ -104,21 +104,28 @@ def update_rol_by_id(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-
-@router.delete("/by-id/{rol_id}")
-def delete_rol_by_id(
+    
+@router.put("/cambiar-estado/{user_id}", status_code=status.HTTP_200_OK)
+def cambiar_rol_estado(
     rol_id: int,
+    nuevo_estado: bool,
     db: Session = Depends(get_db),
     user_token: UserOut = Depends(get_current_user)
 ):
     try:
+        # Verificar permisos del usuario
         id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, 'actualizar'):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
 
-        if not verify_permissions(db, id_rol, modulo, 'borrar'):
-            raise HTTPException(status_code=401, detail= 'Usuario no autorizado')
-        success = crud_roles.delete_rol_by_id(db, rol_id)
+        success = crud_roles.cambiar_rol_estado(db, rol_id, nuevo_estado)
         if not success:
-            raise HTTPException(status_code=400, detail="No se pudo actualizar el rol")
-        return {"message": "rol eliminado correctamente"}
-    except SQLAlchemyError as e:
+            raise HTTPException(status_code=400, detail="No se puedo actualizar el estado del rol")
+
+        return {"message": f"Estado del usuario actualizado a {nuevo_estado}"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
