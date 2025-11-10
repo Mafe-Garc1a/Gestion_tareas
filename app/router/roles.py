@@ -133,11 +133,8 @@ def cambiar_rol_estado(
         success = crud_roles.cambiar_rol_estado(db, rol_id, nuevo_estado)
         if not success:
             raise HTTPException(status_code=400, detail="No se puedo actualizar el estado del rol")
-
         return {"message": f"Estado del usuario actualizado a {nuevo_estado}"}
-
-    except HTTPException:
-        raise
-    except Exception as e:
+    
+    except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
