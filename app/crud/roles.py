@@ -53,7 +53,46 @@ def get_rol_by_id(db: Session, rol_id: int):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener rol por id: {e}")
         raise Exception("Error de base de datos al obtener el rol")
+   
     
+def get_all_roles_pag(db: Session, skip: int = 0, limit: int = 10):
+
+    '''
+    Obtiene los roles con paginacion.
+    '''
+
+    try:
+        # 1. contar roles
+        count_query = text("""
+            SELECT COUNT(id_rol) AS total
+            FROM roles
+        """)
+        total_result = db.execute(count_query).scalar()
+
+        # 2. Consultar roles paginadas
+        data_query = text("""
+            SELECT 
+                roles.id_rol, 
+                roles.nombre_rol, 
+                roles.descripcion, 
+                roles.estado
+            FROM roles
+            ORDER BY id_rol
+            LIMIT :limit OFFSET :skip              
+        """)
+
+        result = db.execute(data_query, {"skip": skip, "limit": limit}).mappings().all()
+
+        # 3. Retornar resultados
+        return {
+            "cant_roles": total_result or 0,
+            "roles": [dict(row) for row in result]
+        }
+    
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener los roles: {e}", exc_info=True)
+        raise Exception ("Error de base de datos al obtener roles")
+
 
 def get_all_roles(db: Session):
     try:
