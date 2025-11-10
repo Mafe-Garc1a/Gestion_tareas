@@ -92,19 +92,6 @@ def get_all_roles_pag(db: Session, skip: int = 0, limit: int = 10):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener los roles: {e}", exc_info=True)
         raise Exception ("Error de base de datos al obtener roles")
-
-
-def get_all_roles(db: Session):
-    try:
-        query = text("""
-                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion, roles.estado
-                    FROM roles
-                """)
-        result = db.execute(query).mappings().all()
-        return result
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener las roles: {e}")
-        raise Exception("Error de base de datos al obtener las roles")
     
     
 def update_rol_by_id(db: Session, rol_id: int, rol: RolUpdate) -> Optional[bool]:

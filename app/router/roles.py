@@ -95,23 +95,6 @@ def get_roles(
         }
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))  
-        
-    
-@router.get("/all-roles", response_model=List[RolOut])
-def get_roles(
-    db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user) 
-):
-    try:
-        id_rol = user_token.id_rol
-        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
-            raise HTTPException(status_code=401, detail="Usuario no autorizado")
-        roles = crud_roles.get_all_roles(db)
-        if not roles:
-            raise HTTPException(status_code=404, detail="Ningun rol encontrado")
-        return roles
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=str(e))  
     
     
 @router.put("/by-id/{rol_id}")
