@@ -186,3 +186,39 @@ def delete_detalle_salvamento_by_id(db: Session, id_detalle: int) -> Optional[bo
         db.rollback()
         logger.error(f"Error al eliminar detalle salvamento {e}")
         raise Exception(f"Error de base de datos al eliminar el detalle de salvamento {e}")
+
+def delete_all_detalle_salvamento_by_id_venta(db: Session, id_venta: int) -> Optional[bool]:
+    try:
+        # Obtener información sibre detalles salvamento por id venta 
+        data = db.execute(text("""
+            SELECT  id_detalle, id_producto, cantidad FROM detalle_salvamento WHERE id_venta = :id_venta
+        """), {"id_venta": id_venta}).mappings().all()
+        if not data:
+            # Si no se encuentran detalles, podemos considerarlo un caso no critico 
+            logger.info(f"No se encontraron detalles para la venta con id {id_venta}.")
+            return True #No hay errores, pero tampoco hay detalles que eliminar.
+        
+        # Eliminar todos los detalles que encontro en la consulta de arriba
+        # Recordar q el data almacena los datos consultados y por eso el for, pueden ser varios
+        for detalle in data: 
+            db.execute(text("""
+                DELETE FROM detalle_salvamento
+                WHERE id_detalle = :id_detalle
+            """), {"id_detalle": detalle['id_detalle']})
+            
+            # Actualizar el stock 
+            db.execute(text("""
+                UPDATE salvamento
+                SET cantidad_gallinas = cantidad_gallinas + :cantidad
+                WHERE id_salvamento = :id_producto
+            """), {
+                "cantidad": detalle['cantidad'], 
+                "id_producto": detalle['id_producto']
+            })
+        
+        #db.commit() *no commit aqui*
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al eliminar detalles de venta {id_venta}: {e}")
+        raise Exception(f"Error de base de datos al eliminar el detalle de la venta")

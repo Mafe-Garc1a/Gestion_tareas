@@ -116,3 +116,26 @@ def delete_detalle_salvamento(
         
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# @router.delete("/by-id-venta/{id_venta}")
+# def delete_detalle_salvamento(
+#     id_venta: int,
+#     db: Session = Depends(get_db),
+#     user_token: UserOut = Depends(get_current_user)
+# ):
+#     try:
+#         id_rol = user_token.id_rol 
+#         modulo = 9     
+#         if not verify_permissions(db, id_rol, modulo, 'actualizar'):
+#             raise HTTPException(status_code=401, detail="Usuario no autorizado para eliminar detalle salvamento")
+        
+#         success = crud_detalle_salvamento.delete_all_detalle_salvamento_by_id_venta(db, id_venta)
+#         if not success:
+#             raise HTTPException(
+#                 status_code=404,
+#                 detail=f"No es posible eliminar los detalles de la venta"
+#             )  
+#         return {"message": "Detalles de venta eliminados correctamente"}
+        
+#     except SQLAlchemyError as e:
+#         raise HTTPException(status_code=500, detail=str(e))
