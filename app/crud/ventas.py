@@ -422,6 +422,10 @@ def cambiar_venta_estado(db: Session, id_venta: int, nuevo_estado: bool) -> bool
     
 
 def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
+    '''
+        Solo se puede eliminar despues de cancelada
+    '''
+
     try:
         consulta = text("""
             SELECT id_venta, estado
