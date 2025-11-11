@@ -3,7 +3,6 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 import logging
 from app.schemas.tareas import TareaCreate, TareaUpdate
-
 from typing import Optional
 from datetime import date   
 
@@ -37,7 +36,7 @@ def get_tareas_pag(
     """
     try:
         base_query = """
-            SELECT id_tarea, titulo, descripcion, fecha_creacion, estado, id_usuario_asignado
+            SELECT id_tarea, id_usuario, descripcion, fecha_hora_init, estado, fecha_hora_fin
             FROM tareas
             WHERE 1=1
         """
@@ -45,10 +44,10 @@ def get_tareas_pag(
 
         # Aplicar filtros si se envían
         if fecha_inicio:
-            base_query += " AND DATE(fecha_creacion) >= :fecha_inicio"
+            base_query += " AND DATE(fecha_hora_init) >= :fecha_inicio"
             params["fecha_inicio"] = fecha_inicio
         if fecha_fin:
-            base_query += " AND DATE(fecha_creacion) <= :fecha_fin"
+            base_query += " AND DATE(fecha_hora_fin) <= :fecha_fin"
             params["fecha_fin"] = fecha_fin
 
         # Contar total de registros con los mismos filtros
@@ -56,7 +55,7 @@ def get_tareas_pag(
         total_result = db.execute(text(count_query), params).scalar()
 
         # Agregar orden y paginación
-        base_query += " ORDER BY fecha_creacion DESC LIMIT :limit OFFSET :skip"
+        base_query += " ORDER BY fecha_hora_init DESC LIMIT :limit OFFSET :skip"
         result = db.execute(text(base_query), params).mappings().all()
 
         return {
@@ -68,6 +67,7 @@ def get_tareas_pag(
         db.rollback()
         logger.error(f"Error al obtener tareas paginadas: {e}")
         raise Exception("Error al obtener tareas paginadas")
+
 
 
 # Obtener tareas por usuario

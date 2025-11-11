@@ -14,6 +14,8 @@ from fastapi import Query
 from typing import Optional
 from datetime import date
 
+
+
 router = APIRouter()
 modulo = 6  # ID del módulo
 
