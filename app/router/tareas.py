@@ -16,20 +16,51 @@ modulo = 6  # ID del módulo
 
 
 # PARA VER TODAS LAS TAREAS REGISTRADAS 
-@router.get("/todas", response_model=List[TareaOut])
-def get_all_tareas(
+@router.get("/pag", response_model=dict)
+def get_tareas_pag(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=200),
+    fecha_inicio: Optional[date] = Query(None, description="Filtrar desde esta fecha"),
+    fecha_fin: Optional[date] = Query(None, description="Filtrar hasta esta fecha"),
     db: Session = Depends(get_db),
     user_token: UserOut = Depends(get_current_user)
 ):
+    """
+    Obtiene las tareas paginadas y opcionalmente filtradas por fecha.
+    (Solo se ejecuta si el usuario ya pasó verify_permissions con permisos de selección)
+    """
     try:
         id_rol = user_token.id_rol
+
+        # Validar permisos del usuario para ver tareas
         if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
             raise HTTPException(status_code=401, detail="Usuario no autorizado")
 
-        tareas = crud_tareas.get_all_tareas(db)
-        return tareas
+        skip = (page - 1) * page_size
+
+        data = crud_tareas.get_tareas_pag(
+            db=db,
+            skip=skip,
+            limit=page_size,
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin
+        )
+
+        total = data["total"]
+        tareas = data["tareas"]
+
+        return {
+            "page": page,
+            "page_size": page_size,
+            "total_tareas": total,
+            "total_pages": (total + page_size - 1) // page_size,
+            "tareas": tareas
+        }
+
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 # Crear una tarea
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
 def create_tarea(
