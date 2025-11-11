@@ -22,14 +22,50 @@ def create_tarea(db: Session, tarea: TareaCreate):
         raise Exception("Error al crear la tarea")
 
 # Obtener todas las tareas
-def get_all_tareas(db: Session):
+def get_tareas_pag(
+    db: Session,
+    skip: int = 0,
+    limit: int = 10,
+    fecha_inicio: Optional[date] = None,
+    fecha_fin: Optional[date] = None
+):
+    """
+    Devuelve las tareas paginadas, opcionalmente filtradas por rango de fechas.
+    """
     try:
-        query = text("SELECT * FROM tareas")
-        result = db.execute(query).mappings().all()
-        return result
+        base_query = """
+            SELECT id_tarea, titulo, descripcion, fecha_creacion, estado, id_usuario_asignado
+            FROM tareas
+            WHERE 1=1
+        """
+        params = {"skip": skip, "limit": limit}
+
+        # Aplicar filtros si se envían
+        if fecha_inicio:
+            base_query += " AND DATE(fecha_creacion) >= :fecha_inicio"
+            params["fecha_inicio"] = fecha_inicio
+        if fecha_fin:
+            base_query += " AND DATE(fecha_creacion) <= :fecha_fin"
+            params["fecha_fin"] = fecha_fin
+
+        # Contar total de registros con los mismos filtros
+        count_query = f"SELECT COUNT(*) AS total FROM ({base_query}) AS sub"
+        total_result = db.execute(text(count_query), params).scalar()
+
+        # Agregar orden y paginación
+        base_query += " ORDER BY fecha_creacion DESC LIMIT :limit OFFSET :skip"
+        result = db.execute(text(base_query), params).mappings().all()
+
+        return {
+            "total": total_result or 0,
+            "tareas": [dict(row) for row in result]
+        }
+
     except SQLAlchemyError as e:
-        logger.error(f"Error al obtener todas las tareas: {e}")
-        raise Exception("Error al obtener todas las tareas")
+        db.rollback()
+        logger.error(f"Error al obtener tareas paginadas: {e}")
+        raise Exception("Error al obtener tareas paginadas")
+
 
 # Obtener tareas por usuario
 def get_tareas_by_user(db: Session, id_usuario: int, usuario_actual: int, rol_actual: int):
