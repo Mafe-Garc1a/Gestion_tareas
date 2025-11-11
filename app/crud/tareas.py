@@ -3,6 +3,8 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 import logging
 from app.schemas.tareas import TareaCreate, TareaUpdate
+from typing import Optional
+from datetime import date
 
 logger = logging.getLogger(__name__)
 

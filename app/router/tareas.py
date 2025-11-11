@@ -10,6 +10,9 @@ from core.database import get_db
 from app.schemas.tareas import TareaCreate, TareaOut, TareaUpdate
 from app.schemas.users import UserOut
 from app.crud import tareas as crud_tareas
+from typing import Optional
+from datetime import date   
+from fastapi import Query
 
 router = APIRouter()
 modulo = 6  # ID del módulo
