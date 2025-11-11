@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 def create_user(db: Session, user: UserCreate) -> Optional[bool]:
     try:
+        pass_encript = get_hashed_password(user.pass_hash)
+        user.pass_hash = pass_encript
         sentencia = text("""
             INSERT INTO usuarios (
                 nombre, documento, id_rol,
