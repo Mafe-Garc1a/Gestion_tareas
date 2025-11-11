@@ -89,8 +89,10 @@ def get_all_ventas_pag(db: Session, skip: int = 0, limit: int = 10):
         # 2. Consultar ventas paginadas
         data_query = text("""
             SELECT 
-                ventas.id_usuario, 
-                ventas.tipo_pago, 
+                ventas.id_usuario,
+                usuarios.nombre AS nombre_usuario, 
+                ventas.tipo_pago,
+                metodo_pago.nombre AS metodo_pago,
                 ventas.id_venta, 
                 ventas.fecha_hora,
                 COALESCE((
@@ -106,6 +108,8 @@ def get_all_ventas_pag(db: Session, skip: int = 0, limit: int = 10):
                 ), 0) AS total,
                 ventas.estado
             FROM ventas
+            LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+            LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
             ORDER BY id_venta
             LIMIT :limit OFFSET :skip              
         """)
@@ -128,7 +132,7 @@ def get_ventas_by_date_range_pag(db: Session, fecha_inicio: str, fecha_fin: str,
     '''
     Obtiene las ventas por rango de fechas y paginacion
     '''
-    
+
     try:
         # 1. contar ventas
         count_query = text("""
@@ -141,8 +145,10 @@ def get_ventas_by_date_range_pag(db: Session, fecha_inicio: str, fecha_fin: str,
         # 2. Consultar ventas paginadas
         data_query = text("""
             SELECT 
-                ventas.id_usuario, 
-                ventas.tipo_pago, 
+                ventas.id_usuario,
+                usuarios.nombre AS nombre_usuario, 
+                ventas.tipo_pago,
+                metodo_pago.nombre AS metodo_pago,
                 ventas.id_venta, 
                 ventas.fecha_hora,
                 COALESCE((
@@ -157,10 +163,12 @@ def get_ventas_by_date_range_pag(db: Session, fecha_inicio: str, fecha_fin: str,
                     WHERE detalle_salvamento.id_venta = ventas.id_venta
                 ), 0) AS total,
                 ventas.estado
-                FROM ventas
-                WHERE DATE(fecha_hora) BETWEEN :fecha_inicio AND :fecha_fin
-                ORDER BY fecha_hora ASC, id_venta
-                LIMIT :limit OFFSET :skip
+            FROM ventas
+            LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+            LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
+            WHERE DATE(fecha_hora) BETWEEN :fecha_inicio AND :fecha_fin
+            ORDER BY fecha_hora ASC, id_venta
+            LIMIT :limit OFFSET :skip
         """)
         
         
@@ -200,8 +208,10 @@ def get_ventas_by_usuario_pag(db: Session, usuario_id: int, skip: int = 0, limit
         # 2. Consultar ventas paginadas
         data_query = text("""
             SELECT 
-                ventas.id_usuario, 
-                ventas.tipo_pago, 
+                ventas.id_usuario,
+                usuarios.nombre AS nombre_usuario, 
+                ventas.tipo_pago,
+                metodo_pago.nombre AS metodo_pago,
                 ventas.id_venta, 
                 ventas.fecha_hora,
                 COALESCE((
@@ -217,6 +227,8 @@ def get_ventas_by_usuario_pag(db: Session, usuario_id: int, skip: int = 0, limit
                 ), 0) AS total,
                 ventas.estado
             FROM ventas
+            LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+            LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
             WHERE id_usuario = :usuario_id
             ORDER BY id_venta
             LIMIT :limit OFFSET :skip              
@@ -233,36 +245,6 @@ def get_ventas_by_usuario_pag(db: Session, usuario_id: int, skip: int = 0, limit
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener las ventas by id_usuario: {e}", exc_info=True)
         raise Exception ("Error de base de datos al obtener ventas")    
-    
-    
-# def get_ventas_by_usuario(db: Session, usuario_id: int):
-#     try:
-#         query = text("""
-#                     SELECT 
-#                         ventas.id_usuario, 
-#                         ventas.tipo_pago, 
-#                         ventas.id_venta, 
-#                         ventas.fecha_hora,
-#                         COALESCE((
-#                             SELECT SUM((precio_venta - valor_descuento) * cantidad) 
-#                             FROM detalle_huevos 
-#                             WHERE detalle_huevos.id_venta = ventas.id_venta
-#                         ), 0)
-#                         +
-#                         COALESCE((
-#                             SELECT SUM((precio_venta - valor_descuento) * cantidad)
-#                             FROM detalle_salvamento 
-#                             WHERE detalle_salvamento.id_venta = ventas.id_venta
-#                         ), 0) AS total,
-#                         ventas.estado
-#                     FROM ventas
-#                     WHERE id_usuario = :usuario_id
-#                 """)
-#         result = db.execute(query, {"usuario_id": usuario_id}).mappings().all()
-#         return result
-#     except SQLAlchemyError as e:
-#         logger.error(f"Error al obtener venta por fecha: {e}")
-#         raise Exception("Error de base de datos al obtener la venta")
    
     
 def get_ventas_by_tipo_pago_pag(db: Session, tipo_id: int, skip: int = 0, limit: int = 10):
@@ -283,8 +265,10 @@ def get_ventas_by_tipo_pago_pag(db: Session, tipo_id: int, skip: int = 0, limit:
         # 2. Consultar ventas paginadas
         data_query = text("""
             SELECT 
-                ventas.id_usuario, 
-                ventas.tipo_pago, 
+                ventas.id_usuario,
+                usuarios.nombre AS nombre_usuario, 
+                ventas.tipo_pago,
+                metodo_pago.nombre AS metodo_pago,
                 ventas.id_venta, 
                 ventas.fecha_hora,
                 COALESCE((
@@ -300,6 +284,8 @@ def get_ventas_by_tipo_pago_pag(db: Session, tipo_id: int, skip: int = 0, limit:
                 ), 0) AS total,
                 ventas.estado
             FROM ventas
+            LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+            LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
             WHERE tipo_pago = :tipo_id
             ORDER BY id_venta
             LIMIT :limit OFFSET :skip              
@@ -320,25 +306,29 @@ def get_ventas_by_tipo_pago_pag(db: Session, tipo_id: int, skip: int = 0, limit:
 def get_venta_by_id(db: Session, venta_id: int):
     try:
         query = text("""
-                    SELECT 
-                        ventas.id_usuario, 
-                        ventas.tipo_pago, 
-                        ventas.id_venta, 
-                        ventas.fecha_hora,
-                        COALESCE((
-                            SELECT SUM((precio_venta - valor_descuento) * cantidad) 
-                            FROM detalle_huevos 
-                            WHERE detalle_huevos.id_venta = ventas.id_venta
-                        ), 0)
-                        +
-                        COALESCE((
-                            SELECT SUM((precio_venta - valor_descuento) * cantidad)
-                            FROM detalle_salvamento 
-                            WHERE detalle_salvamento.id_venta = ventas.id_venta
-                        ), 0) AS total,
-                        ventas.estado
-                    FROM ventas
-                    WHERE ventas.id_venta = :venta_id
+                SELECT 
+                    ventas.id_usuario,
+                    usuarios.nombre AS nombre_usuario, 
+                    ventas.tipo_pago,
+                    metodo_pago.nombre AS metodo_pago,
+                    ventas.id_venta, 
+                    ventas.fecha_hora,
+                    COALESCE((
+                        SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                        FROM detalle_huevos 
+                        WHERE detalle_huevos.id_venta = ventas.id_venta
+                    ), 0)
+                    +
+                    COALESCE((
+                        SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                        FROM detalle_salvamento 
+                        WHERE detalle_salvamento.id_venta = ventas.id_venta
+                    ), 0) AS total,
+                    ventas.estado
+                FROM ventas
+                LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+                LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
+                WHERE ventas.id_venta = :venta_id
                 """)
         result = db.execute(query, {"venta_id": venta_id}).mappings().first()
         return result
@@ -429,4 +419,37 @@ def cambiar_venta_estado(db: Session, id_venta: int, nuevo_estado: bool) -> bool
         db.rollback() 
         logger.error(f"Error al cambiar el estado de la venta {id_venta}: {e}")
         raise
+    
+
+def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
+    try:
+        consulta = text("""
+            SELECT id_venta, estado
+            FROM ventas
+            WHERE id_venta = :id_venta
+        """)
+        res_consulta = db.execute(consulta, {'id_venta': venta_id}).mappings().first()
+
+        # Si no existe la venta, no hay nada que eliminar
+        if not res_consulta:
+            return False
+        
+        # Si la venta está activa, no se elimina
+        if res_consulta['estado']:
+            return False
+        
+        # Si está inactiva, eliminar
+        sentencia = text("""
+            DELETE 
+            FROM ventas
+            WHERE id_venta = :id_venta
+        """)
+        result = db.execute(sentencia, {'id_venta': venta_id})
+        db.commit()
+        
+        return result.rowcount > 0
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al eliminar venta {venta_id}: {e}")
+        raise Exception("Error de base de datos al eliminar la venta")
     

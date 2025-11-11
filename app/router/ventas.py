@@ -223,3 +223,23 @@ def cambiar_venta_estado(
 
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail="Error de base de datos al cambiar el estado de la venta")
+    
+
+
+@router.delete("/by-id/{venta_id}")
+def delete_venta_by_id(
+    venta_id: int,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+
+        if not verify_permissions(db, id_rol, modulo, 'borrar'):
+            raise HTTPException(status_code=401, detail= 'Usuario no autorizado')
+        success = crud_ventas.delete_venta_by_id(db, venta_id)
+        if not success:
+            raise HTTPException(status_code=400, detail="No se pudo eliminar la venta")
+        return {"message": "Venta eliminada correctamente"}
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
