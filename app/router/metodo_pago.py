@@ -10,11 +10,7 @@ from app.crud import metodo_pago as crud_metodosPago
 from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter()
-
-
-# ///////////
-modulo = 8 # ID del módulo de métodos de pago (cambiar)
-# ///////////
+modulo = 4
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
 def create_metodoPago(    
     metodoPago: MetodoPagoCreate,
@@ -81,5 +77,25 @@ def update_metodosPago(
         if not success:
             raise HTTPException(status_code=400, detail="No se pudo actualizar el metodo de pago")
         return {"message": "Metodo de pago actualizado correctamente"}
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.put("/change-status/{metodoPago_id}", status_code=status.HTTP_200_OK)
+def change_metodoPago_status(
+    metodoPago_id: int,
+    nuevo_estado: bool,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, 'actualizar'):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        
+        success = crud_metodosPago.change_metodoPago_status(db, metodoPago_id, nuevo_estado)
+        if not success:
+            raise HTTPException(status_code=400, detail="No se pudo cambiar el estado del metodo de pago")
+        return {"message": f"Estado del metodo de pago actualizado a {nuevo_estado}"}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
