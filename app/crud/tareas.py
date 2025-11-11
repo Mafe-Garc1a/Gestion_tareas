@@ -4,6 +4,9 @@ from sqlalchemy.exc import SQLAlchemyError
 import logging
 from app.schemas.tareas import TareaCreate, TareaUpdate
 
+from typing import Optional
+from datetime import date   
+
 logger = logging.getLogger(__name__)
 
 # Crear una tarea
