@@ -58,3 +58,18 @@ def update_modulo(db: Session, id_modulo: int, modulo: ModuloUpdate):
         db.rollback()
         logger.error(f"Error al actualizar módulo {id_modulo}: {e}")
         raise Exception("Error al actualizar el módulo")
+
+def change_modulo_status(db: Session, id_modulo: int, estado: bool) -> bool:
+    try:
+        sentencia = text("""
+            UPDATE modulos
+            SET estado = :estado
+            WHERE id_modulo = :id_modulo
+        """)
+        result = db.execute(sentencia, {"estado": estado, "id_modulo": id_modulo})
+        db.commit()
+        return result.rowcount > 0
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al cambiar estado del módulo {id_modulo}: {e}")
+        raise Exception("Error de base de datos al cambiar estado del módulo")
