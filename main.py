@@ -1,10 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+<<<<<<< HEAD
 
 from app.router import modulos
 from app.router import permisos
 from app.router import roles
 from app.router import users
+=======
+from app.router import users
+# from app.router import fincas
+from app.router import auth
+>>>>>>> modulo/ventas
 from app.router import ventas
 from app.router import tareas
 from app.router import detalle_huevos
@@ -14,12 +20,19 @@ from app.router import auth
 
 app = FastAPI()
 
+<<<<<<< HEAD
 app.include_router(auth.router, prefix="/access", tags=["login"])
 
 app.include_router(modulos.router, prefix="/modulos", tags=["modulos"])
 app.include_router(permisos.router, prefix="/permisos", tags=["permisos"])
 app.include_router(roles.router, prefix="/roles", tags=["roles"])
 app.include_router(users.router, prefix="/users", tags=["users"])
+=======
+# Incluir en el objeto app los routers
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(auth.router, prefix="/access", tags=["login"])
+# app.include_router(fincas.router, prefix="/fincas", tags=["fincas"])
+>>>>>>> modulo/ventas
 app.include_router(ventas.router, prefix="/ventas", tags=["ventas"])
 app.include_router(tareas.router, prefix="/tareas", tags=["tareas"])
 app.include_router(detalle_huevos.router, prefix="/detalle_huevos", tags=["detalle_huevos"])
