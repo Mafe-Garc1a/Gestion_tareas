@@ -93,6 +93,9 @@ def delete_detalle_huevos(
         raise HTTPException(status_code=500, detail=str(e))
     
 
+    
+    
+
 
 
 
