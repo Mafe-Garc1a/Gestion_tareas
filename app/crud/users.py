@@ -10,11 +10,6 @@ logger = logging.getLogger(__name__)
 
 def create_user(db: Session, user: UserCreate) -> Optional[bool]:
     try:
-        
-        print(user.pass_hash)
-        pass_encript = get_hashed_password(user.pass_hash)
-        print(pass_encript)
-        user.pass_hash = pass_encript
         sentencia = text("""
             INSERT INTO usuarios (
                 nombre, documento, id_rol,
@@ -36,7 +31,7 @@ def create_user(db: Session, user: UserCreate) -> Optional[bool]:
 
 def get_user_by_email_for_login(db: Session, email: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol, pass_hash
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, pass_hash
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE email = :correo
@@ -51,7 +46,7 @@ def get_user_by_email_for_login(db: Session, email: str):
 
 def get_user_by_email(db: Session, email: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE email = :correo
@@ -66,7 +61,7 @@ def get_user_by_email(db: Session, email: str):
 
 def get_all_user_except_admins(db: Session):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE usuarios.id_rol NOT IN (1,2)
@@ -127,7 +122,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> bool:
 
 def get_user_by_id(db: Session, id: int):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE id_usuario = :id_user
@@ -138,7 +133,47 @@ def get_user_by_id(db: Session, id: int):
         logger.error(f"Error al obtener usuario por id: {e}")
         raise Exception("Error de base de datos al obtener el usuario")
     
+def get_user_by_document_number(db: Session, document: str):
+    try:
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+                     FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
+                     WHERE usuarios.documento = :document
+                """)
+        result = db.execute(query, {"document": document}).mappings().first()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener usuario por su documento: {e}")
+        raise Exception("Error de base de datos al obtener el usuario")
 
+def get_user_by_role(db: Session, role: str):
+    try:
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+                     FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
+                     WHERE LOWER(roles.nombre_rol) = LOWER(:role)
+                """)
+        result = db.execute(query, {"role": role}).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener usuario por rol: {e}")
+        raise Exception("Error de base de datos al obtener los usuarios")
+
+def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool:
+    try:
+        sentencia = text("""
+            UPDATE usuarios
+            SET estado = :estado
+            WHERE id_usuario = :id_usuario
+        """)
+        result = db.execute(sentencia, {"estado": nuevo_estado, "id_usuario": id_usuario})
+        db.commit()
+
+        return result.rowcount > 0
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Error al cambiar el estado del usuario {id_usuario}: {e}")
+        raise Exception("Error de base de datos al cambiar el estado del usuario")
+    
 
 
 
