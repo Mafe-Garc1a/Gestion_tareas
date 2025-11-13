@@ -26,7 +26,8 @@ def create_venta(db: Session, venta: VentaCreate) -> Optional[bool]:
         
         # convertir datos enviados por el cliente en diccionario
         venta_data = venta.model_dump()
-         
+        venta_data['tipo_pago'] = 1  # SE CREA CON VALOR POR DEFECTO 1 (DEBE EXISTIR EN BASE DE DATOS UN REGISTRO CON ID=1 "COMO EFECTIVO" EN LA TABLA METODO_PAGO )
+        
         db.execute(sentencia, venta_data)
         db.commit()
         return True

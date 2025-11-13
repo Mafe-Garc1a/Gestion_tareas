@@ -6,7 +6,6 @@ from decimal import Decimal
 class VentaBase(BaseModel):
     # id_usuario = id de quien registra la venta
     id_usuario: int
-    tipo_pago: int
     fecha_hora: datetime
     estado: bool
 

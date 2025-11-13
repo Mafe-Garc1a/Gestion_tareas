@@ -8,6 +8,21 @@ logger = logging.getLogger(__name__)
 
 def verify_permissions(db: Session, id_rol: int, id_modulo: int, accion: str):
     try:
+        # consultar estado del rol (activo o inactivo)
+        sentencia = text("""
+                        SELECT estado
+                        FROM roles
+                        WHERE id_rol = :rol 
+                        """)
+        res = db.execute(sentencia, {"rol": id_rol}).mappings().first()
+        
+        if not res:
+            raise HTTPException(status_code=404, detail="Rol no encontrado al verificar permisos")
+        
+        # Si el estado del rol es inactivo
+        if res['estado'] == 0:
+            raise HTTPException(status_code=401, detail="Usuario no autorizado, rol inactivo")
+        
         query = text("""
                      SELECT insertar, actualizar, seleccionar, borrar
                      FROM permisos
