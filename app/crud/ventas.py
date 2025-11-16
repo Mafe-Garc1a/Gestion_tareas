@@ -21,10 +21,10 @@ def create_venta(db: Session, venta: VentaCreate) -> Optional[Dict]:
         sentencia = text("""
             INSERT INTO ventas (
                 fecha_hora, id_usuario,
-                tipo_pago, estado
+                tipo_pago
             ) VALUES (
                 :fecha_hora, :id_usuario,
-                :tipo_pago, :estado
+                :tipo_pago
             )
         """)
         

@@ -7,7 +7,6 @@ class VentaBase(BaseModel):
     # id_usuario = id de quien registra la venta
     id_usuario: int
     fecha_hora: datetime
-    estado: bool
 
 class VentaCreate(VentaBase):
     pass
@@ -27,6 +26,7 @@ class VentaOut(VentaBase):
     metodo_pago: str
     # este campo es calculado
     total: Decimal
+    estado: bool
     
 class ventaPag(BaseModel):
     page: int
