@@ -39,3 +39,14 @@ class ventaPag(BaseModel):
 class VentaCreateResponse(BaseModel):
     message: str
     data_venta: Dict[str, Any]
+    
+    
+class DetalleVenta(BaseModel):
+    tipo: str
+    id_detalle: int
+    id_producto: int
+    cantidad: int
+    id_venta: int
+    valor_descuento: Decimal
+    precio_venta: Decimal
+    

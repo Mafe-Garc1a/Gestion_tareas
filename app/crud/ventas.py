@@ -35,6 +35,9 @@ def create_venta(db: Session, venta: VentaCreate) -> Optional[Dict]:
         db.commit()
         
         id_venta_creada = resultado.lastrowid
+        if id_venta_creada is None:
+            logger.warning(f"No se pudo recuperar el id de la venta")
+            return None
         
         consulta = text("""
             SELECT 
@@ -363,8 +366,7 @@ def get_venta_by_id(db: Session, venta_id: int):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener venta por id: {e}")
         raise Exception("Error de base de datos al obtener la venta")
-
-
+      
     
 def update_venta_by_id(db: Session, venta_id: int, venta: VentaUpdate) -> Optional[bool]:
     try:
@@ -485,3 +487,23 @@ def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
         logger.error(f"Error al eliminar venta {venta_id}: {e}")
         raise Exception("Error de base de datos al eliminar la venta")
     
+
+def get_all_detalle_by_id_venta(db: Session, venta_id: int):
+    try:
+        sentencia = text("""
+            SELECT 'huevos' AS tipo, id_detalle, id_producto, cantidad, id_venta, valor_descuento, precio_venta
+            FROM detalle_huevos
+            WHERE id_venta = :venta_id
+
+            UNION ALL
+
+            SELECT 'salvamento' AS tipo, id_detalle, id_producto, cantidad, id_venta, valor_descuento, precio_venta
+            FROM detalle_salvamento
+            WHERE id_venta = :venta_id;                      
+        """)
+    
+        result = db.execute(sentencia, {"venta_id": venta_id}).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener detalles de la venta: {e}")
+        raise Exception("Error de base de datos al obtener detalles de la venta")
