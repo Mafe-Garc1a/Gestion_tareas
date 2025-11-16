@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import Optional
+from typing import Dict, Optional
 import logging
 from app.schemas.ventas import VentaCreate, VentaUpdate, VentaEstado
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -12,7 +12,11 @@ from app.crud.detalle_salvamento import delete_all_detalle_salvamento_by_id_vent
 
 logger = logging.getLogger(__name__)
 
-def create_venta(db: Session, venta: VentaCreate) -> Optional[bool]:
+def create_venta(db: Session, venta: VentaCreate) -> Optional[Dict]:
+    '''
+        Crea una venta en la base de datos y devuelve la venta completa
+        incluyendo el nombre del usuario y el método de pago.
+    '''
     try:
         sentencia = text("""
             INSERT INTO ventas (
@@ -24,13 +28,36 @@ def create_venta(db: Session, venta: VentaCreate) -> Optional[bool]:
             )
         """)
         
-        # convertir datos enviados por el cliente en diccionario
         venta_data = venta.model_dump()
         venta_data['tipo_pago'] = 1  # SE CREA CON VALOR POR DEFECTO 1 (DEBE EXISTIR EN BASE DE DATOS UN REGISTRO CON ID=1 "COMO EFECTIVO" EN LA TABLA METODO_PAGO )
         
-        db.execute(sentencia, venta_data)
+        resultado = db.execute(sentencia, venta_data)
         db.commit()
-        return True
+        
+        id_venta_creada = resultado.lastrowid
+        
+        consulta = text("""
+            SELECT 
+                ventas.id_usuario,
+                usuarios.nombre AS nombre_usuario, 
+                ventas.tipo_pago,
+                metodo_pago.nombre AS metodo_pago,
+                ventas.id_venta, 
+                ventas.fecha_hora,
+                ventas.estado
+            FROM ventas
+            LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+            LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
+            WHERE id_venta = :id           
+        """)
+        
+        data_consulta = db.execute(consulta, {"id": id_venta_creada}).mappings().first()
+        
+        if data_consulta is None:
+            logger.warning(f"No se pudo recuperar la venta con ID {id_venta_creada}")
+            return None
+        
+        return dict(data_consulta)
     except IntegrityError as e:
         db.rollback()
         logger.error(f"Error de integridad: {e}")

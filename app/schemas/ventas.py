@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 from decimal import Decimal
 
@@ -34,3 +34,8 @@ class ventaPag(BaseModel):
     total_ventas: int
     total_pages: int
     ventas: List[VentaOut]
+    
+    
+class VentaCreateResponse(BaseModel):
+    message: str
+    data_venta: Dict[str, Any]

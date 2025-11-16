@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from app.router.dependencies import get_current_user
 from app.crud.permisos import verify_permissions
-from app.schemas.ventas import VentaCreate, VentaOut, VentaUpdate, ventaPag
+from app.schemas.ventas import VentaCreate, VentaOut, VentaUpdate, ventaPag, VentaCreateResponse
 from app.schemas.users import UserOut
 from app.crud import ventas as crud_ventas
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -13,7 +13,7 @@ from datetime import date
 router = APIRouter()
 modulo = 5
 
-@router.post("/crear", status_code=status.HTTP_201_CREATED)
+@router.post("/crear", response_model=VentaCreateResponse, status_code=status.HTTP_201_CREATED)
 def create_venta(    
     venta: VentaCreate,
     db: Session = Depends(get_db),
@@ -24,8 +24,11 @@ def create_venta(
 
         if not verify_permissions(db, id_rol, modulo, 'insertar'):
             raise HTTPException(status_code=401, detail= 'Usuario no autorizado')
-        crud_ventas.create_venta(db, venta)
-        return {"message": "Venta creada correctamente"}
+        venta_creada = crud_ventas.create_venta(db, venta)
+        return  {
+                    "message": "Venta creada correctamente", 
+                    "data_venta": venta_creada
+                }
 
     except IntegrityError as e:
         if "foreign key" in str(e.orig).lower():
