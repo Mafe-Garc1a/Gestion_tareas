@@ -6,7 +6,6 @@ from decimal import Decimal
 class VentaBase(BaseModel):
     # id_usuario = id de quien registra la venta
     id_usuario: int
-    tipo_pago: int
     fecha_hora: datetime
     estado: bool
 
@@ -24,6 +23,8 @@ class VentaEstado(BaseModel):
     
 class VentaOut(VentaBase):
     id_venta: int
+    nombre_usuario: str
+    metodo_pago: str
     # este campo es calculado
     total: Decimal
     
