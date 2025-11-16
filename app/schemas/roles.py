@@ -23,7 +23,7 @@ class RolOut(RolBase):
     id_rol: int
     
     
-# Schema para paginacion
+# Schema para paginacion (no se está usando)
 class RolPag(BaseModel):
     page: int
     page_size: int
