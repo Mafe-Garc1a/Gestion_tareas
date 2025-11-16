@@ -24,6 +24,7 @@ class RolOut(RolBase):
     id_rol: int
     
     
+# Schema para paginacion
 class RolPag(BaseModel):
     page: int
     page_size: int
