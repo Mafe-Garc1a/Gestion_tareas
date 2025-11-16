@@ -35,10 +35,20 @@ class ventaPag(BaseModel):
     total_pages: int
     ventas: List[VentaOut]
     
+
+class DatosVentaCreate(BaseModel):
+    id_usuario: int
+    nombre_usuario: str
+    tipo_pago: int
+    metodo_pago: str
+    id_venta: int
+    fecha_hora: datetime
+    estado: bool
+
     
 class VentaCreateResponse(BaseModel):
     message: str
-    data_venta: Dict[str, Any]
+    data_venta: DatosVentaCreate
     
     
 class DetalleVenta(BaseModel):
