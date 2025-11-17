@@ -23,6 +23,7 @@ class VentaEstado(BaseModel):
 class VentaOut(VentaBase):
     id_venta: int
     nombre_usuario: str
+    tipo_pago: int
     metodo_pago: str
     # este campo es calculado
     total: Decimal
@@ -55,6 +56,7 @@ class DetalleVenta(BaseModel):
     tipo: str
     id_detalle: int
     id_producto: int
+    descripcion: str
     cantidad: int
     id_venta: int
     valor_descuento: Decimal

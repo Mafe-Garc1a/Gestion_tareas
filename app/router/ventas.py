@@ -44,6 +44,24 @@ def create_venta(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail="Error interno en la base de datos")
     
+
+@router.get("/all-ventas", response_model=List[VentaOut])
+def get_all_ventas( 
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user) ):
+    try:
+        id_rol = user_token.id_rol
+
+        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
+            raise HTTPException(status_code=401, detail= 'Usuario no autorizado')
+        venta = crud_ventas.get_all_ventas(db)
+        if not venta:
+            raise HTTPException(status_code=404, detail="Venta no encontrada")
+        return venta
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
     
 @router.get("/all-ventas-pag", response_model=ventaPag)
 def get_ventas(

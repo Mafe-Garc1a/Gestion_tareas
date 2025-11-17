@@ -71,33 +71,37 @@ def create_venta(db: Session, venta: VentaCreate) -> Optional[Dict]:
         raise
        
 
-# def get_all_ventas(db: Session):
-#     try:
-#         query = text("""
-#                     SELECT 
-#                         ventas.id_usuario, 
-#                         ventas.tipo_pago, 
-#                         ventas.id_venta, 
-#                         ventas.fecha_hora,
-#                         COALESCE((
-#                             SELECT SUM((precio_venta - valor_descuento) * cantidad) 
-#                             FROM detalle_huevos 
-#                             WHERE detalle_huevos.id_venta = ventas.id_venta
-#                         ), 0)
-#                         +
-#                         COALESCE((
-#                             SELECT SUM((precio_venta - valor_descuento) * cantidad)
-#                             FROM detalle_salvamento 
-#                             WHERE detalle_salvamento.id_venta = ventas.id_venta
-#                         ), 0) AS total,
-#                         ventas.estado
-#                     FROM ventas
-#                 """)
-#         result = db.execute(query).mappings().all()
-#         return result
-#     except SQLAlchemyError as e:
-#         logger.error(f"Error al obtener las ventas: {e}")
-#         raise Exception("Error de base de datos al obtener las ventas")
+def get_all_ventas(db: Session):
+    try:
+        query = text("""
+                    SELECT 
+                        ventas.id_usuario,
+                        usuarios.nombre AS nombre_usuario, 
+                        ventas.tipo_pago,
+                        metodo_pago.nombre AS metodo_pago,
+                        ventas.id_venta, 
+                        ventas.fecha_hora,
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                            FROM detalle_huevos 
+                            WHERE detalle_huevos.id_venta = ventas.id_venta
+                        ), 0)
+                        +
+                        COALESCE((
+                            SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                            FROM detalle_salvamento 
+                            WHERE detalle_salvamento.id_venta = ventas.id_venta
+                        ), 0) AS total,
+                        ventas.estado
+                    FROM ventas
+                    LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+                    LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
+                """)
+        result = db.execute(query).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener las ventas: {e}")
+        raise Exception("Error de base de datos al obtener las ventas")
     
 
 # OFFSET :skip salta un numero de filas (por ejemplo, los usuarios ya mostrados).
@@ -450,10 +454,11 @@ def cambiar_venta_estado(db: Session, id_venta: int, nuevo_estado: bool) -> bool
         logger.error(f"Error al cambiar el estado de la venta {id_venta}: {e}")
         raise
     
-
+    
 def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
     '''
-        Solo se puede eliminar despues de cancelada
+    Solo se puede eliminar despues de cancelada
+    Elimina la venta y sus detalles.
     '''
 
     try:
@@ -464,41 +469,138 @@ def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
         """)
         res_consulta = db.execute(consulta, {'id_venta': venta_id}).mappings().first()
 
-        # Si no existe la venta, no hay nada que eliminar
         if not res_consulta:
+            # Venta no existe
             return False
-        
-        # Si la venta está activa, no se elimina
-        if res_consulta['estado']:
+
+        if res_consulta['estado'] == True:
+            # Venta activa, no se puede eliminar
             return False
+
+
+        # Si está cancelada, eliminar
         
-        # Si está inactiva, eliminar
+        # Primero eliminar detalles
+        if not delete_all_detalle_huevos_by_id_venta(db, venta_id):
+            db.rollback()
+            logger.error(f"No se pudieron eliminar los detalles de huevos de la venta {venta_id}.")
+            return False
+
+        if not delete_all_detalle_salvamento_by_id_venta(db, venta_id):
+            db.rollback()
+            logger.error(f"No se pudieron eliminar los detalles de salvamento de la venta {venta_id}.")
+            return False
+
+
+        # Luego la venta
         sentencia = text("""
             DELETE 
             FROM ventas
             WHERE id_venta = :id_venta
         """)
         result = db.execute(sentencia, {'id_venta': venta_id})
+
+        if result.rowcount == 0:
+            db.rollback()
+            logger.error(f"No se pudo eliminar la venta {venta_id}.")
+            return False
+
         db.commit()
-        
-        return result.rowcount > 0
+        return True
     except SQLAlchemyError as e:
         db.rollback()
-        logger.error(f"Error al eliminar venta {venta_id}: {e}")
-        raise Exception("Error de base de datos al eliminar la venta")
+        logger.error(f"Error de base de datos al eliminar venta {venta_id}: {e}")
+        return False
+       
+
+# def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
+#     '''
+#         Solo se puede eliminar despues de cancelada
+#     '''
+
+#     try:
+#         consulta = text("""
+#             SELECT id_venta, estado
+#             FROM ventas
+#             WHERE id_venta = :id_venta
+#         """)
+#         res_consulta = db.execute(consulta, {'id_venta': venta_id}).mappings().first()
+
+#         # Si no existe la venta, no hay nada que eliminar
+#         if not res_consulta:
+#             return False
+        
+#         # Si la venta está activa, no se elimina
+#         if res_consulta['estado'] == True:
+#             return False
+        
+#         # Si está inactiva, eliminar
+        
+#         # Primero eliminar detalles
+#         success_detalle_huevos = delete_all_detalle_huevos_by_id_venta(db, venta_id)
+#         success_detalle_salvamento = delete_all_detalle_salvamento_by_id_venta(db, venta_id)
+                
+#         if success_detalle_huevos != True or success_detalle_salvamento != True:
+#             logger.error(f"Error al eliminar los detalles de la venta {venta_id}.")
+#             return False
+        
+#         # Luego la venta
+#         sentencia = text("""
+#             DELETE 
+#             FROM ventas
+#             WHERE id_venta = :id_venta
+#         """)
+#         result = db.execute(sentencia, {'id_venta': venta_id})
+        
+#         if result.rowcount == 0:
+#             logger.error(f"Error al eliminar la venta {venta_id}.")
+#             return False
+        
+#         db.commit()
+#         return result.rowcount > 0
+#     except SQLAlchemyError as e:
+#         db.rollback()
+#         logger.error(f"Error al eliminar venta {venta_id}: {e}")
+#         raise Exception("Error de base de datos al eliminar la venta")
     
 
 def get_all_detalle_by_id_venta(db: Session, venta_id: int):
     try:
         sentencia = text("""
-            SELECT 'huevos' AS tipo, id_detalle, id_producto, cantidad, id_venta, valor_descuento, precio_venta
+            SELECT 
+                'huevos' AS tipo, 
+                detalle_huevos.id_detalle, 
+                detalle_huevos.id_producto, 
+                CONCAT('Huevo ', tipo_huevos.color, ' ', tipo_huevos.tamaño, ' - ', stock.unidad_medida) COLLATE utf8mb4_general_ci AS descripcion, 
+                detalle_huevos.cantidad, 
+                detalle_huevos.id_venta, 
+                detalle_huevos.valor_descuento, 
+                detalle_huevos.precio_venta
             FROM detalle_huevos
+            INNER JOIN stock 
+                ON detalle_huevos.id_producto = stock.id_producto
+            INNER JOIN produccion_huevos 
+                ON stock.id_produccion = produccion_huevos.id_produccion
+            INNER JOIN tipo_huevos 
+                ON produccion_huevos.id_tipo_huevo = tipo_huevos.id_tipo_huevo
             WHERE id_venta = :venta_id
 
             UNION ALL
 
-            SELECT 'salvamento' AS tipo, id_detalle, id_producto, cantidad, id_venta, valor_descuento, precio_venta
+            SELECT 
+                'salvamento' AS tipo, 
+                detalle_salvamento.id_detalle, 
+                detalle_salvamento.id_producto, 
+                CONCAT('Gallina ', tipo_gallinas.raza) COLLATE utf8mb4_general_ci AS descripcion, 
+                detalle_salvamento.cantidad, 
+                detalle_salvamento.id_venta, 
+                detalle_salvamento.valor_descuento, 
+                detalle_salvamento.precio_venta
             FROM detalle_salvamento
+            INNER JOIN salvamento
+                ON detalle_salvamento.id_producto = salvamento.id_salvamento
+            INNER JOIN tipo_gallinas
+                ON salvamento.id_tipo_gallina = tipo_gallinas.id_tipo_gallinas
             WHERE id_venta = :venta_id;                      
         """)
     
