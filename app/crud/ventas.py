@@ -387,13 +387,27 @@ def update_venta_by_id(db: Session, venta_id: int, venta: VentaUpdate) -> Option
         """)
 
         venta_data["id_venta"] = venta_id
+        tipo_pago = venta_data["tipo_pago"]
+        
+        consulta_metodo_pago = db.execute(text("""
+            SELECT estado 
+            FROM metodo_pago 
+            WHERE id_tipo = :tipo_pago"""), {"tipo_pago": tipo_pago}).mappings().first()
+        
+        # si metodo_pago no existe
+        if consulta_metodo_pago is None:
+            return False
+        
+        # si metodo pago es inactivo
+        if not consulta_metodo_pago["estado"]:
+            return False
 
         result = db.execute(sentencia, venta_data)
         db.commit()
 
         # devuelve true si la operacion afecto mas de 0 registros en la bd
         return result.rowcount > 0
-    
+
     except IntegrityError as e:
         db.rollback()
         logger.error(f"Error de integridad: {e}")
