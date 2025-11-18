@@ -12,7 +12,6 @@ class VentaCreate(VentaBase):
     pass
 
 class VentaUpdate(BaseModel):
-    id_usuario: Optional [int] = None
     tipo_pago: Optional [int] = None
 
 
