@@ -1,3 +1,5 @@
+from datetime import date
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
