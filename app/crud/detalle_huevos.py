@@ -9,7 +9,7 @@ from app.schemas.detalle_huevos import DetalleHuevosCreate, DetalleHuevosUpdate
 
 logger = logging.getLogger(__name__)
 
-def create_detalle_huevos(db: Session, detalle_h: DetalleHuevosCreate) -> Optional[bool]:
+def create_detalle_huevos(db: Session, detalle_h: DetalleHuevosCreate) -> dict:
     try:
         stock_disponible = db.execute(text("SELECT cantidad_disponible FROM stock WHERE id_producto = :id_producto"), {"id_producto": detalle_h.id_producto}).mappings().first()
         if not stock_disponible or stock_disponible['cantidad_disponible'] < detalle_h.cantidad:
@@ -25,6 +25,7 @@ def create_detalle_huevos(db: Session, detalle_h: DetalleHuevosCreate) -> Option
             )
         """)
         db.execute(sentencia, detalle_h.model_dump())
+        id_creado = db.execute(text("SELECT LAST_INSERT_ID()")).scalar()
         
         db.execute(text("""
             UPDATE stock
@@ -32,7 +33,7 @@ def create_detalle_huevos(db: Session, detalle_h: DetalleHuevosCreate) -> Option
             WHERE id_producto = :id_producto
         """), {"cantidad": detalle_h.cantidad, "id_producto": detalle_h.id_producto})
         db.commit()
-        return True
+        return {"id_detalle_huevo": id_creado}
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al crear detalle_huevos: {e}")
@@ -123,7 +124,20 @@ def update_detalle_huevos_by_id(db: Session, detalle_id: int, detalle_h: Detalle
         logger.error(f"Error al actualizar detalle_huevos {detalle_id}: {e}")
         print("Error al actualizar detalle_huevos:", e)
         raise 
-    
+
+
+def get_detalle_huevos_by_id(db: Session, id_detalle: int):
+    try:
+        query = text("""SELECT id_detalle, id_producto, cantidad, id_venta, 
+                        valor_descuento, precio_venta
+                    FROM detalle_huevos
+                    WHERE id_detalle = :id_detalle
+                """)
+        result = db.execute(query, {"id_detalle": id_detalle}).mappings().first()
+        return result
+    except SQLAlchemyError as e:  
+        logger.error(f"Error de BD al obtener detalle {e}")
+        raise Exception("Error de base de datos al obtener el detalle") 
 
 def get_detalle_huevos_by_id_venta(db:Session, id:int):
     try:
@@ -199,5 +213,30 @@ def delete_all_detalle_huevos_by_id_venta(db: Session, id_venta: int):
     except SQLAlchemyError as e:
         logger.error(f"Error al eliminar detalles de venta con id_venta {id_venta}: {e}")
         raise Exception("Error al eliminar los detalles de venta")
+    
+def get_all_products_stock(db: Session):
+    try:
+        # Obtener los detalles de la venta
+        data = text("""
+            SELECT 
+                stock.id_producto,
+                stock.unidad_medida,
+                tipo_huevos.color,
+                tipo_huevos.tamaño AS tamanio
+            FROM 
+                stock
+            INNER JOIN 
+                produccion_huevos ON stock.id_produccion = produccion_huevos.id_produccion
+            INNER JOIN 
+                tipo_huevos ON produccion_huevos.id_tipo_huevo = tipo_huevos.id_tipo_huevo 
+        """)
+        result = db.execute(data).mappings().all()
+
+        # *No commit aquí*. La función solo realiza las acciones SQL, y la transacción se maneja en la función llamadora.
+        return result
+
+    except SQLAlchemyError as e:
+        logger.error(f"error al obtener productos")
+        raise Exception("Error de base datos al obtener productos")
 
 
