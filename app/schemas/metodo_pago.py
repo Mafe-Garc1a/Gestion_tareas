@@ -10,7 +10,7 @@ class MetodoPagoCreate(MetodoPagoBase):
     pass
 
 class MetodoPagoUpdate(BaseModel):
-    nombre: Optional[str] = Field(default=None, min_length=1, max_length=30)
+    nombre: Optional[str] = Field(default=None, min_length=3, max_length=30)
     descripcion: Optional[str] = Field(default=None, max_length=100)
 
 
