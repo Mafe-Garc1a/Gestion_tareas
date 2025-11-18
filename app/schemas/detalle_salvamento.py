@@ -26,3 +26,8 @@ class DetalleSalvamentoUpdate(BaseModel):
 
 class DetalleSalvamentoOut(DetalleSalvamentoBase): 
     id_detalle: int 
+
+class salvamentoProductosOut(BaseModel):
+    id_salvamento: int
+    raza: str
+    descripcion: str

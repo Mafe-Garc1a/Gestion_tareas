@@ -10,7 +10,7 @@ from app.schemas.detalle_salvamento import CreateDetalleSalvamento, DetalleSalva
 # app./crud/detalle_salvamento
 logger = logging.getLogger(__name__) # Agarra la ubicación del archivo con el que estamos trabajando
 
-def create_detalle_salvamento(db: Session, detalle_salvamento: CreateDetalleSalvamento) -> Optional[bool]:
+def create_detalle_salvamento(db: Session, detalle_salvamento: CreateDetalleSalvamento) -> dict:
     try:
         # Verificar cantidad disponible
         salvamento_query = db.execute(text("SELECT cantidad_gallinas FROM salvamento WHERE id_salvamento = :id_producto"),
@@ -29,6 +29,8 @@ def create_detalle_salvamento(db: Session, detalle_salvamento: CreateDetalleSalv
             )
         """)
         db.execute(sentencia, detalle_salvamento.model_dump())
+        id_creado = db.execute(text("SELECT LAST_INSERT_ID()")).scalar()
+
         
         # Actualizar cantidad
         db.execute(text("""
@@ -38,7 +40,7 @@ def create_detalle_salvamento(db: Session, detalle_salvamento: CreateDetalleSalv
         """), {"cantidad": detalle_salvamento.cantidad, "id_producto": detalle_salvamento.id_producto})
 
         db.commit() # Guardar cambios permanentemente
-        return True
+        return {"id_detalle_salvamento": id_creado}
     except SQLAlchemyError as e:
         db.rollback() 
         logger.error(f"Error al crear detalle salvamento: {e}")
@@ -222,3 +224,23 @@ def delete_all_detalle_salvamento_by_id_venta(db: Session, id_venta: int) -> Opt
         db.rollback()
         logger.error(f"Error al eliminar detalles de venta {id_venta}: {e}")
         raise Exception(f"Error de base de datos al eliminar el detalle de la venta")
+    
+def get_all_products_salvamento(db: Session):
+    try:
+        # Obtener los detalles de la venta
+        data = text("""
+            SELECT 
+                salvamento.id_salvamento,
+                tipo_gallinas.raza,
+                tipo_gallinas.descripcion
+            FROM salvamento
+            INNER JOIN tipo_gallinas ON salvamento.id_tipo_gallina = tipo_gallinas.id_tipo_gallinas 
+        """)
+        result = db.execute(data).mappings().all()
+
+        # *No commit aquí*. La función solo realiza las acciones SQL, y la transacción se maneja en la función llamadora.
+        return result
+
+    except SQLAlchemyError as e:
+        logger.error(f"error al obtener productos")
+        raise Exception("Error de base datos al obtener productos")
