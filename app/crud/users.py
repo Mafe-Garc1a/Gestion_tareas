@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 import logging
 from core.security import get_hashed_password
 from app.schemas.users import UserCreate, UserUpdate
+from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,27 @@ def create_user(db: Session, user: UserCreate) -> Optional[bool]:
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al crear usuario: {e}")
-        raise Exception("Error de base de datos al crear el usuario")
+
+
+        error_msg = str(e.__cause__)
+
+
+        if "Duplicate entry" in error_msg and "email" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="El correo ya está registrado."
+            )
+        if "Duplicate entry" in error_msg and "documento" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="El número de documento ya existe."
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno al crear el usuario."
+        )
+        # raise Exception("Error de base de datos al crear el usuario")
 
 def get_user_by_email_for_login(db: Session, email: str):
     try:
@@ -174,7 +195,7 @@ def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al cambiar el estado del usuario {id_usuario}: {e}")
-        raise Exception("Error de base de datos al cambiar el estado del usuario")
+        raise Exception("Error de base de datos al cambiar el estado del usuario")
     
 
 
