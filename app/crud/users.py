@@ -176,6 +176,43 @@ def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool
         logger.error(f"Error al cambiar el estado del usuario {id_usuario}: {e}")
         raise Exception("Error de base de datos al cambiar el estado del usuario")
     
+def get_all_user_except_admins_pag(db: Session, skip: int = 0, limit:int = 10):
+    """
+    Obtiene los usuarios (excepto administradores) con paginacion.
+    Tambien realiza una segunda consulta para contar el total de usuarios.
+    Compatible con PostgreSQL, MySql y MQlite.
+    """
+    try:
+        #1 contar total de usuarios excepto admins
+
+        count_query = text("""
+            SELECT COUNT(id_usuario) AS total
+            FROM usuarios
+            WHERE id_rol NOT IN (1, 2)
+        """)
+
+        total_result = db.execute(count_query).scalar()
+
+        #2 contar usuarios paginados
+        data_query = text("""
+            SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol 
+            FROM usuarios 
+            JOIN roles ON usuarios.id_rol = roles.id_rol
+            WHERE usuarios.id_rol NOT IN (1, 2)
+            ORDER BY id_usuario 
+            LIMIT :limit OFFSET :skip
+        """)
+
+        result = db.execute(data_query, {'skip':skip, 'limit':limit}).mappings().all()
+
+        return {
+            "total":total_result or 0,
+            "users": [dict(row) for row in result]
+        }
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener los usuarios: {e}", exc_info=True)
+        raise Exception ("Error de base de datos al obtener usuarios")
+    
 
 
 

@@ -25,5 +25,13 @@ class UserOut(UserBase):
     id_usuario: int
     nombre_rol: str
 
+class UserPag(BaseModel):
+    page: int
+    page_size: int
+    total_users: int
+    total_pages: int
+    users: list[dict]
+
+
 
 
