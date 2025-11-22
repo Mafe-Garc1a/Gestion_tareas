@@ -10,7 +10,7 @@ from app.crud import metodo_pago as crud_metodosPago
 from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter()
-modulo = 4
+modulo = 8
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
 def create_metodoPago(    
     metodoPago: MetodoPagoCreate,
