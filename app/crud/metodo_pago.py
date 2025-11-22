@@ -4,7 +4,6 @@ from typing import Optional
 import logging
 from app.schemas.metodo_pago import MetodoPagoCreate, MetodoPagoUpdate 
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -24,21 +23,7 @@ def create_metodoPago(db: Session, metodoPago: MetodoPagoCreate) -> Optional[boo
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al crear el metodo de pago: {e}")
-
-        
-        error_msg = str(e.__cause__)
-
-        if "Duplicate entry" in error_msg and "nombre" in error_msg:
-            raise HTTPException(
-                status_code=400,
-                detail="El nombre del método de pago ya existe."
-            )
-
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al crear el método de pago."
-        )
-        # raise Exception("Error de base de datos al crear el metodo de pago")
+        raise Exception("Error de base de datos al crear el metodo de pago")
     
 
 
@@ -70,6 +55,7 @@ def get_metodosPago(db: Session):
     
 def update_metodoPago_by_id(db: Session, id: int, metodoPago: MetodoPagoUpdate) -> Optional[bool]:
     try:
+        # Solo los campos enviados por el cliente
         metodoPago_data = metodoPago.model_dump(exclude_unset=True)
         if not metodoPago_data:
             return False 
@@ -90,18 +76,7 @@ def update_metodoPago_by_id(db: Session, id: int, metodoPago: MetodoPagoUpdate) 
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al actualizar el metodo de pago {id}: {e}")
-        error_msg = str(e.__cause__)
-
-        if "Duplicate entry" in error_msg and "nombre" in error_msg:
-            raise HTTPException(
-                status_code=400,
-                detail="El nombre del método de pago ya existe."
-            )
-
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al actualizar el método de pago."
-        )
+        raise Exception("Error de base de datos al actualizar el metodo de pago")
     
 def change_metodoPago_status(db: Session, id: int, nuevo_estado: bool) -> bool:
     try:
