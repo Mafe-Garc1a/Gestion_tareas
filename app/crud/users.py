@@ -196,6 +196,21 @@ def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool
         db.rollback()
         logger.error(f"Error al cambiar el estado del usuario {id_usuario}: {e}")
         raise Exception("Error de base de datos al cambiar el estado del usuario")
+
+
+
+def get_all_user_except_superadmins(db: Session):
+    try:
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+                     FROM usuarios
+                     JOIN roles ON usuarios.id_rol = roles.id_rol
+                     WHERE usuarios.id_rol NOT IN (1)
+                     """)
+        result = db.execute(query).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener los usuarios: {e}")
+        raise Exception("Error de base de datos al obtener los usuarios")
     
 
 
