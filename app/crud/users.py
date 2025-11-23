@@ -213,7 +213,18 @@ def get_all_user_except_admins_pag(db: Session, skip: int = 0, limit:int = 10):
         logger.error(f"Error al obtener los usuarios: {e}", exc_info=True)
         raise Exception ("Error de base de datos al obtener usuarios")
     
-
+def get_all_user_except_superadmins(db: Session):
+    try:
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+                     FROM usuarios
+                     JOIN roles ON usuarios.id_rol = roles.id_rol
+                     WHERE usuarios.id_rol NOT IN (1)
+                     """)
+        result = db.execute(query).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener los usuarios: {e}")
+        raise Exception("Error de base de datos al obtener los usuarios")
 
 
 
