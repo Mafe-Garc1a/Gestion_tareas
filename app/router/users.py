@@ -179,3 +179,19 @@ def get_user_pag(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.get("/all-users-except-superadmins", response_model=List[UserOut])
+def get_users_except_superadmins(
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user) 
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        users = crud_users.get_all_user_except_superadmins(db)
+        return users
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
