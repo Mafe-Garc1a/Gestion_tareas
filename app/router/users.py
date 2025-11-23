@@ -189,6 +189,8 @@ def get_users_except_superadmins(
 ):
     try:
         id_rol = user_token.id_rol
+
+        modulo = 10
         if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
             raise HTTPException(status_code=401, detail="Usuario no autorizado")
         users = crud_users.get_all_user_except_superadmins(db)
