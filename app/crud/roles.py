@@ -13,9 +13,9 @@ def create_rol(db: Session, rol: RolCreate) -> Optional[bool]:
     try:
         sentencia = text("""
             INSERT INTO roles (
-                nombre_rol, descripcion
+                nombre_rol, descripcion, estado
             ) VALUES (
-                :nombre_rol, :descripcion
+                :nombre_rol, :descripcion, :estado
             )
         """)
         db.execute(sentencia, rol.model_dump())
@@ -58,7 +58,7 @@ def get_rol_by_id(db: Session, rol_id: int):
 def get_all_roles(db: Session):
     try:
         query = text("""
-                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion
+                    SELECT roles.id_rol, roles.nombre_rol, roles.descripcion, roles.estado
                     FROM roles
                 """)
         result = db.execute(query).mappings().all()
