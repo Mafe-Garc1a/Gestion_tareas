@@ -121,7 +121,24 @@ def update_user_by_id(db: Session, user_id: int, user: UserUpdate) -> Optional[b
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al actualizar usuario {user_id}: {e}")
-        raise Exception("Error de base de datos al actualizar el usuario")
+        error_msg = str(e.__cause__)
+        if "Duplicate entry" in error_msg and "email" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="El correo ya está registrado."
+            )
+        if "Duplicate entry" in error_msg and "documento" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="El número de documento ya existe."
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno al actualizar el usuario."
+        )
+        # raise Exception("Error de base de datos al actualizar el usuario")
+
 
 
 def update_user(db: Session, user_id: int, user_update: UserUpdate) -> bool:
