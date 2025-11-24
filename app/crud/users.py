@@ -29,7 +29,27 @@ def create_user(db: Session, user: UserCreate) -> Optional[bool]:
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Error al crear usuario: {e}")
-        raise Exception("Error de base de datos al crear el usuario")
+
+
+        error_msg = str(e.__cause__)
+
+
+        if "Duplicate entry" in error_msg and "email" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="El correo ya está registrado."
+            )
+        if "Duplicate entry" in error_msg and "documento" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="El número de documento ya existe."
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno al crear el usuario."
+        )
+        # raise Exception("Error de base de datos al crear el usuario")
 
 def get_user_by_email_for_login(db: Session, email: str):
     try:
