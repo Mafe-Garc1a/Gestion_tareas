@@ -148,7 +148,7 @@ def get_detalle_salvamento(
     try:
         id_rol = user_token.id_rol 
         modulo = 9     
-        if not verify_permissions(db, id_rol, modulo, 'borrar'):
+        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
             raise HTTPException(status_code=401, detail="Usuario no autorizado para ver todos los productos en salvamento")
         
         detalle_salvamento = crud_detalle_salvamento.get_all_products_salvamento(db)
