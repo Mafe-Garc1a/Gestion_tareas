@@ -48,7 +48,7 @@ def get_tareas_pag(
                 t.fecha_hora_fin
             FROM tareas t
             JOIN usuarios u ON t.id_usuario = u.id_usuario   
-            WHERE 1=1;
+            WHERE 1=1
         """
         params = {"skip": skip, "limit": limit}
 
