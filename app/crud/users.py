@@ -54,7 +54,7 @@ def create_user(db: Session, user: UserCreate) -> Optional[bool]:
 
 def get_user_by_email_for_login(db: Session, email: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, pass_hash
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, pass_hash, roles.descripcion as descripcion_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE email = :correo
@@ -69,7 +69,7 @@ def get_user_by_email_for_login(db: Session, email: str):
 
 def get_user_by_email(db: Session, email: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, roles.descripcion as descripcion_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE email = :correo
@@ -84,7 +84,7 @@ def get_user_by_email(db: Session, email: str):
 
 def get_all_user_except_admins(db: Session):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, roles.descripcion as descripcion_rol 
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE usuarios.id_rol NOT IN (1,2)
@@ -174,7 +174,7 @@ def get_user_by_id(db: Session, id: int):
     
 def get_user_by_document_number(db: Session, document: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, roles.descripcion as descripcion_rol 
                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
                      WHERE usuarios.documento = :document
                 """)
@@ -186,7 +186,7 @@ def get_user_by_document_number(db: Session, document: str):
 
 def get_user_by_role(db: Session, role: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, roles.descripcion as descripcion_rol
                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
                      WHERE LOWER(roles.nombre_rol) = LOWER(:role)
                 """)
@@ -217,7 +217,7 @@ def change_user_status(db: Session, id_usuario: int, nuevo_estado: bool) -> bool
 
 def get_all_user_except_superadmins(db: Session):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, roles.descripcion as descripcion_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE usuarios.id_rol NOT IN (1)
