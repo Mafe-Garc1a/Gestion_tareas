@@ -40,6 +40,7 @@ def get_tareas_pag(
         base_query = """
             SELECT 
                 t.id_tarea,
+                u.id_usuario,
                 u.documento AS documento ,
                 u.nombre AS nombre_usuario,
                 t.descripcion,
