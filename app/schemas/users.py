@@ -27,4 +27,10 @@ class UserOut(UserBase):
     descripcion_rol: str
 
 
+class RecuperarContraseniaUser(BaseModel):
+    email: str
+
+class CambioContraseniaUser(BaseModel):
+    token: str
+    contrasenia_nueva : str
 

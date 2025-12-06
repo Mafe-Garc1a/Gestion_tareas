@@ -7,6 +7,10 @@ from core.security import get_hashed_password
 from app.schemas.users import UserCreate, UserUpdate
 from fastapi import HTTPException
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 logger = logging.getLogger(__name__)
 
 def create_user(db: Session, user: UserCreate) -> Optional[bool]:
@@ -161,7 +165,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> bool:
 
 def get_user_by_id(db: Session, id: int):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, roles.descripcion as descripcion_rol
                      FROM usuarios
                      JOIN roles ON usuarios.id_rol = roles.id_rol
                      WHERE id_usuario = :id_user
@@ -228,6 +232,31 @@ def get_all_user_except_superadmins(db: Session):
         logger.error(f"Error al obtener los usuarios: {e}")
         raise Exception("Error de base de datos al obtener los usuarios")
     
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USER = "adsoaprendiz@gmail.com"
+SMTP_PASS = "weme rgnj wbvr bcrd"
+
+def enviar_correo_reset(email_destino, link):
+    msg = MIMEMultipart()
+    msg["From"] = SMTP_USER
+    msg["To"] = email_destino
+    msg["subject"] = "recuperar contraseña"
+
+
+    html = f"""
+    <h3>Recuperar contraseña</h3>
+    <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+    <a href="{link}">{link}</a>
+    <p>Este enlace expira en 30 minutos.</p>
+    """
+    msg.attach(MIMEText(html, "html"))
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        server.sendmail(SMTP_USER, email_destino, msg.as_string())
 
 
 
