@@ -11,6 +11,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from core.config import settings
+
 logger = logging.getLogger(__name__)
 
 def create_user(db: Session, user: UserCreate) -> Optional[bool]:
@@ -233,16 +235,12 @@ def get_all_user_except_superadmins(db: Session):
         raise Exception("Error de base de datos al obtener los usuarios")
     
 
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "adsoaprendiz@gmail.com"
-SMTP_PASS = "weme rgnj wbvr bcrd"
 
 def enviar_correo_reset(email_destino, link):
     msg = MIMEMultipart()
-    msg["From"] = SMTP_USER
+    msg["From"] = settings.SMTP_USER
     msg["To"] = email_destino
-    msg["subject"] = "recuperar contraseña"
+    msg["Subject"] = "Recuperar contraseña"
 
 
     html = f"""
@@ -253,10 +251,12 @@ def enviar_correo_reset(email_destino, link):
     """
     msg.attach(MIMEText(html, "html"))
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
         server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_USER, email_destino, msg.as_string())
+        server.login(settings.SMTP_USER, settings.SMTP_PASS)
+        server.sendmail(settings.SMTP_USER, email_destino, msg.as_string())
+        
+        print(f"✅ Correo enviado exitosamente a {email_destino}")
 
 
 

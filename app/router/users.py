@@ -197,7 +197,7 @@ def cambiar_contrasenia(data: CambioContraseniaUser, db: Session = Depends(get_d
     except:
         raise HTTPException(status_code=400, detail="Token invalido o expirado")
     
-    user = crud_users.get_user_by_email(email)
+    user = crud_users.get_user_by_email(db, email)
 
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
