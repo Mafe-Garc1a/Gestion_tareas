@@ -102,7 +102,46 @@ def get_all_ventas(db: Session):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener las ventas: {e}")
         raise Exception("Error de base de datos al obtener las ventas")
-    
+
+
+def get_ventas_by_date_range(db: Session, fecha_inicio: str, fecha_fin: str):
+    try:
+        query = text("""
+            SELECT 
+                ventas.id_usuario,
+                usuarios.nombre AS nombre_usuario, 
+                ventas.tipo_pago,
+                metodo_pago.nombre AS metodo_pago,
+                ventas.id_venta, 
+                ventas.fecha_hora,
+                COALESCE((
+                    SELECT SUM((precio_venta - valor_descuento) * cantidad) 
+                    FROM detalle_huevos 
+                    WHERE detalle_huevos.id_venta = ventas.id_venta
+                ), 0)
+                +
+                COALESCE((
+                    SELECT SUM((precio_venta - valor_descuento) * cantidad)
+                    FROM detalle_salvamento 
+                    WHERE detalle_salvamento.id_venta = ventas.id_venta
+                ), 0) AS total,
+                ventas.estado
+            FROM ventas
+            LEFT JOIN usuarios ON usuarios.id_usuario = ventas.id_usuario
+            LEFT JOIN metodo_pago ON metodo_pago.id_tipo = ventas.tipo_pago
+            WHERE DATE(fecha_hora) BETWEEN :fecha_inicio AND :fecha_fin
+            ORDER BY fecha_hora ASC, id_venta
+        """)
+        result = db.execute(query, {
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin
+        }).mappings().all()
+        return result
+
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener venta por rango de fechas: {e}")
+        raise Exception("Error de base de datos al obtener la venta")
+
 
 # OFFSET :skip salta un numero de filas (por ejemplo, los usuarios ya mostrados).
 # FETCH NEXT :limit ROWS ONLY obtiene solo las filas de esa "pagina".
