@@ -60,9 +60,30 @@ def get_all_ventas(
         return venta
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-    
-    
+
+
+@router.get("/all-rango-fechas", response_model=List[VentaOut])
+def get_ventas_by_date_range_sin_pag(
+    fecha_inicio: str = Query(..., description="Fecha inicial en formato YYYY-MM-DD"),
+    fecha_fin: str = Query(..., description="Fecha final en formato YYYY-MM-DD"),
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+
+        if not verify_permissions(db, id_rol, modulo, 'seleccionar'):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+
+        ventas = crud_ventas.get_ventas_by_date_range(db, fecha_inicio, fecha_fin)
+        if not ventas:
+            raise HTTPException(status_code=404, detail="No hay ventas en ese rango de fechas")
+        return ventas
+
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener las ventas: {e}")      
+
+        
 @router.get("/all-ventas-pag", response_model=ventaPag)
 def get_ventas(
     db: Session = Depends(get_db),
