@@ -81,7 +81,7 @@ def update_detalle_huevos_by_id(db: Session, detalle_id: int, detalle_h: Detalle
                 """), {"id": id_producto_nuevo}).mappings().first()
 
                 if not stock_actual or stock_actual['cantidad_disponible'] < diferencia_cantidad:
-                    raise HTTPException(status_code=400, detail="Error validacion")
+                    raise HTTPException(status_code=400, detail="Stock insuficiente")
                 
         if id_producto_nuevo != id_producto_anterior:
             db.execute(text("""

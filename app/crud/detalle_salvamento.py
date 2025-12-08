@@ -114,7 +114,7 @@ def update_detalle_salvamento_by_id(db: Session, detalle_id: int, detalle: Detal
                 if not salvamento_actual:
                     raise HTTPException(status_code=400, detail="El producto no existe en el salvamento")
                 if salvamento_actual["cantidad_gallinas"] < diferencia:
-                    raise HTTPException(status_code=400, detail="Error validación")
+                    raise HTTPException(status_code=400, detail="Cantidad insuficiente")
 
         # Ajustar el stock según los cambios detectados
         if id_producto_nuevo != id_producto_ant:
