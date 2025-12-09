@@ -99,7 +99,19 @@ def get_tareas_by_user(db: Session, id_usuario: int, usuario_actual: int, rol_ac
 # Obtener tarea por ID
 def get_tarea_by_id(db: Session, id_tarea: int):
     try:
-        query = text("SELECT * FROM tareas WHERE id_tarea = :id_tarea")
+        query = text(""" SELECT 
+                t.id_tarea,
+                u.id_usuario,
+                u.documento AS documento,
+                u.nombre AS nombre_usuario,
+                t.descripcion,
+                t.fecha_hora_init,
+                t.fecha_hora_fin,
+                t.estado
+            FROM tareas t
+            JOIN usuarios u ON t.id_usuario = u.id_usuario
+            WHERE t.id_usuario = :id_usuario
+            ORDER BY t.fecha_hora_init DESC""")
         result = db.execute(query, {"id_tarea": id_tarea}).mappings().first()
         return result
     except SQLAlchemyError as e:
