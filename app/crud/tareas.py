@@ -102,7 +102,7 @@ def get_tarea_by_id(db: Session, id_tarea: int):
         query = text("""
             SELECT 
                 t.id_tarea,
-                t.id_usuario,
+                u.id_usuario,
                 u.documento AS documento,
                 u.nombre AS nombre_usuario,
                 t.descripcion,
