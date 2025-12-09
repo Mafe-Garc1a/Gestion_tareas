@@ -98,7 +98,8 @@ def get_tareas_by_user(db: Session, id_usuario: int, usuario_actual: int, rol_ac
                 t.fecha_hora_fin,
                 t.estado
             FROM tareas t
-            JOIN usuarios u ON t.id_usuario = u.id_usuario""")
+            JOIN usuarios u ON t.id_usuario = u.id_usuario
+            WHERE t.id_usuario = :id_usuario  """)
         result = db.execute(query, {"id_usuario": id_usuario}).mappings().all()
         return result
     except SQLAlchemyError as e:
