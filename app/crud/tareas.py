@@ -110,9 +110,7 @@ def get_tarea_by_id(db: Session, id_tarea: int):
                 t.fecha_hora_fin,
                 t.estado
             FROM tareas t
-            JOIN usuarios u ON t.id_usuario = u.id_usuario
-            WHERE t.id_usuario = :id_usuario
-            ORDER BY t.fecha_hora_init DESC
+            JOIN usuarios u ON t.id_usuario = u.id_usuario  C
         """)
         result = db.execute(query, {"id_tarea": id_tarea}).mappings().first()
         return result
