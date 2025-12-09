@@ -35,4 +35,5 @@ class TareaUpdate(BaseModel):
 
 class TareaOut(TareaBase):
     id_tarea: int
-    # nombre_usuario: str
+    nombre_usuario: Optional[str] = None
+    documento: Optional[str] = None
