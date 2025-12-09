@@ -88,7 +88,17 @@ def get_tareas_by_user(db: Session, id_usuario: int, usuario_actual: int, rol_ac
         if rol_actual == 4 and id_usuario != usuario_actual:
             raise Exception("No tienes permiso para ver tareas de otros usuarios")
 
-        query = text("SELECT * FROM tareas WHERE id_usuario = :id_usuario")
+        query = text(""" SELECT 
+                t.id_tarea,
+                u.id_usuario,
+                u.documento AS documento,
+                u.nombre AS nombre_usuario,
+                t.descripcion,
+                t.fecha_hora_init,
+                t.fecha_hora_fin,
+                t.estado
+            FROM tareas t
+            JOIN usuarios u ON t.id_usuario = u.id_usuario""")
         result = db.execute(query, {"id_usuario": id_usuario}).mappings().all()
         return result
     except SQLAlchemyError as e:
