@@ -225,10 +225,8 @@ def get_all_products_stock(db: Session):
                 tipo_huevos.tamaño AS tamanio
             FROM 
                 stock
-            INNER JOIN 
-                produccion_huevos ON stock.id_produccion = produccion_huevos.id_produccion
-            INNER JOIN 
-                tipo_huevos ON produccion_huevos.id_tipo_huevo = tipo_huevos.id_tipo_huevo 
+            INNER JOIN  
+                tipo_huevos ON tipo_huevos.id_tipo_huevo = stock.tipo 
         """)
         result = db.execute(data).mappings().all()
 
