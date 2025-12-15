@@ -583,7 +583,7 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
                 ON detalle_huevos.id_producto = stock.id_producto
             INNER JOIN tipo_huevos 
                 ON stock.tipo = tipo_huevos.id_tipo_huevo
-            WHERE id_venta = venta_id
+            WHERE id_venta = :venta_id
 
             UNION ALL
 
@@ -601,7 +601,7 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
                 ON detalle_salvamento.id_producto = salvamento.id_salvamento
             INNER JOIN tipo_gallinas
                 ON salvamento.id_tipo_gallina = tipo_gallinas.id_tipo_gallinas
-            WHERE id_venta = venta_id;           
+            WHERE id_venta = :venta_id;           
         """)
     
         result = db.execute(sentencia, {"venta_id": venta_id}).mappings().all()
