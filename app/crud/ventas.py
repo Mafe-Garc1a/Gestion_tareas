@@ -566,57 +566,6 @@ def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
         return False
        
 
-# def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
-#     '''
-#         Solo se puede eliminar despues de cancelada
-#     '''
-
-#     try:
-#         consulta = text("""
-#             SELECT id_venta, estado
-#             FROM ventas
-#             WHERE id_venta = :id_venta
-#         """)
-#         res_consulta = db.execute(consulta, {'id_venta': venta_id}).mappings().first()
-
-#         # Si no existe la venta, no hay nada que eliminar
-#         if not res_consulta:
-#             return False
-        
-#         # Si la venta está activa, no se elimina
-#         if res_consulta['estado'] == True:
-#             return False
-        
-#         # Si está inactiva, eliminar
-        
-#         # Primero eliminar detalles
-#         success_detalle_huevos = delete_all_detalle_huevos_by_id_venta(db, venta_id)
-#         success_detalle_salvamento = delete_all_detalle_salvamento_by_id_venta(db, venta_id)
-                
-#         if success_detalle_huevos != True or success_detalle_salvamento != True:
-#             logger.error(f"Error al eliminar los detalles de la venta {venta_id}.")
-#             return False
-        
-#         # Luego la venta
-#         sentencia = text("""
-#             DELETE 
-#             FROM ventas
-#             WHERE id_venta = :id_venta
-#         """)
-#         result = db.execute(sentencia, {'id_venta': venta_id})
-        
-#         if result.rowcount == 0:
-#             logger.error(f"Error al eliminar la venta {venta_id}.")
-#             return False
-        
-#         db.commit()
-#         return result.rowcount > 0
-#     except SQLAlchemyError as e:
-#         db.rollback()
-#         logger.error(f"Error al eliminar venta {venta_id}: {e}")
-#         raise Exception("Error de base de datos al eliminar la venta")
-    
-
 def get_all_detalle_by_id_venta(db: Session, venta_id: int):
     try:
         sentencia = text("""
@@ -632,11 +581,9 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
             FROM detalle_huevos
             INNER JOIN stock 
                 ON detalle_huevos.id_producto = stock.id_producto
-            INNER JOIN produccion_huevos 
-                ON stock.id_produccion = produccion_huevos.id_produccion
             INNER JOIN tipo_huevos 
-                ON produccion_huevos.id_tipo_huevo = tipo_huevos.id_tipo_huevo
-            WHERE id_venta = :venta_id
+                ON stock.tipo = tipo_huevos.id_tipo_huevo
+            WHERE id_venta = venta_id
 
             UNION ALL
 
@@ -654,7 +601,7 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
                 ON detalle_salvamento.id_producto = salvamento.id_salvamento
             INNER JOIN tipo_gallinas
                 ON salvamento.id_tipo_gallina = tipo_gallinas.id_tipo_gallinas
-            WHERE id_venta = :venta_id;                      
+            WHERE id_venta = venta_id;           
         """)
     
         result = db.execute(sentencia, {"venta_id": venta_id}).mappings().all()
