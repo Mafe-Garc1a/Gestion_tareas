@@ -137,4 +137,3 @@ def cambiar_rol_estado(
     
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
