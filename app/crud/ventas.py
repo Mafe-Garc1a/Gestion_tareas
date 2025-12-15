@@ -616,7 +616,7 @@ def delete_venta_by_id(db: Session, venta_id: int) -> Optional[bool]:
 #         logger.error(f"Error al eliminar venta {venta_id}: {e}")
 #         raise Exception("Error de base de datos al eliminar la venta")
     
-
+    
 def get_all_detalle_by_id_venta(db: Session, venta_id: int):
     try:
         sentencia = text("""
@@ -632,11 +632,9 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
             FROM detalle_huevos
             INNER JOIN stock 
                 ON detalle_huevos.id_producto = stock.id_producto
-            INNER JOIN produccion_huevos 
-                ON stock.id_produccion = produccion_huevos.id_produccion
             INNER JOIN tipo_huevos 
-                ON produccion_huevos.id_tipo_huevo = tipo_huevos.id_tipo_huevo
-            WHERE id_venta = :venta_id
+                ON stock.tipo = tipo_huevos.id_tipo_huevo
+            WHERE id_venta = venta_id
 
             UNION ALL
 
@@ -654,7 +652,7 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
                 ON detalle_salvamento.id_producto = salvamento.id_salvamento
             INNER JOIN tipo_gallinas
                 ON salvamento.id_tipo_gallina = tipo_gallinas.id_tipo_gallinas
-            WHERE id_venta = :venta_id;                      
+            WHERE id_venta = venta_id;           
         """)
     
         result = db.execute(sentencia, {"venta_id": venta_id}).mappings().all()
@@ -662,3 +660,4 @@ def get_all_detalle_by_id_venta(db: Session, venta_id: int):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener detalles de la venta: {e}")
         raise Exception("Error de base de datos al obtener detalles de la venta")
+
