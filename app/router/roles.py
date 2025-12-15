@@ -105,7 +105,7 @@ def update_rol_by_id(
         raise HTTPException(status_code=500, detail=str(e))
     
     
-@router.put("/cambiar-estado/{user_id}", status_code=status.HTTP_200_OK)
+@router.put("/cambiar-estado/{rol_id}", status_code=status.HTTP_200_OK)
 def cambiar_rol_estado(
     rol_id: int,
     nuevo_estado: bool,
