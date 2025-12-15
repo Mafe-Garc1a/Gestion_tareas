@@ -72,7 +72,7 @@ def update_detalle_huevos_by_id(db: Session, detalle_id: int, detalle_h: Detalle
                 raise HTTPException(status_code=400, detail="Error validacion")
             
             if stock_nuevo['cantidad_disponible'] < cantidad_nueva:
-                raise HTTPException(status_code=400, detail="Error validacion")
+                raise HTTPException(status_code=400, detail="Stock insuficiente en este producto")
         else:
             diferencia_cantidad = cantidad_nueva - cantidad_anterior
             if diferencia_cantidad > 0:

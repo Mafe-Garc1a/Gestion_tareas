@@ -4,13 +4,13 @@ from sqlalchemy.orm import Session
 from app.crud.permisos import verify_permissions
 from app.router.dependencies import get_current_user
 from core.database import get_db
-from app.schemas.users import UserCreate, UserOut, UserUpdate, RecuperarContraseniaUser, CambioContraseniaUser
+from app.schemas.users import UserCreate, UserOut, UserUpdate
 from app.crud import users as crud_users
 from sqlalchemy.exc import SQLAlchemyError
 
-from itsdangerous import URLSafeTimedSerializer
+# from itsdangerous import URLSafeTimedSerializer
 
-from core.security import get_hashed_password
+# from core.security import get_hashed_password
 
 router = APIRouter()
 modulo = 4
@@ -173,39 +173,7 @@ def get_users_except_superadmins(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-SECRET_KEY = "TU_SECRET_KEY"
-serializer = URLSafeTimedSerializer(SECRET_KEY)
-@router.post("/recuperar-contrasenia")
-def recuperar_contrasenia(data: RecuperarContraseniaUser, db: Session = Depends(get_db)):
-    user = crud_users.get_user_by_email(db, data.email)
-    if not user:
-        raise HTTPException(status_code=404, detail="Correo no encontrado")
-    
-    token = serializer.dumps(data.email)
-    
-    #Generar token
-    link_recuperar = f"https://front-end-gestion-tareas-avisena.onrender.com/reset-password.html?token={token}"
 
-    crud_users.enviar_correo_reset(data.email, link_recuperar)
 
-    return {"message": "Correo enviado"}
-
-@router.post("/cambiar-contrasenia")
-def cambiar_contrasenia(data: CambioContraseniaUser, db: Session = Depends(get_db)):
-    try:
-        email = serializer.loads(data.token, max_age=1800)
-    except:
-        raise HTTPException(status_code=400, detail="Token invalido o expirado")
-    
-    user = crud_users.get_user_by_email(db, email)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    user.pass_hash = get_hashed_password(data.contrasenia_nueva)
-
-    db.commit()
-
-    return {"message": "Contraseña actualizada"}
 
 

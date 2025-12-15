@@ -236,27 +236,7 @@ def get_all_user_except_superadmins(db: Session):
     
 
 
-def enviar_correo_reset(email_destino, link):
-    msg = MIMEMultipart()
-    msg["From"] = settings.SMTP_USER
-    msg["To"] = email_destino
-    msg["Subject"] = "Recuperar contraseña"
 
-
-    html = f"""
-    <h3>Recuperar contraseña</h3>
-    <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-    <a href="{link}">{link}</a>
-    <p>Este enlace expira en 30 minutos.</p>
-    """
-    msg.attach(MIMEText(html, "html"))
-
-    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
-        server.starttls()
-        server.login(settings.SMTP_USER, settings.SMTP_PASS)
-        server.sendmail(settings.SMTP_USER, email_destino, msg.as_string())
-        
-        print(f"✅ Correo enviado exitosamente a {email_destino}")
 
 
 

@@ -17,7 +17,7 @@ def create_detalle_salvamento(db: Session, detalle_salvamento: CreateDetalleSalv
                                 {"id_producto": detalle_salvamento.id_producto}).mappings().first()
         
         if not salvamento_query or salvamento_query["cantidad_gallinas"] < detalle_salvamento.cantidad:
-            raise HTTPException(status_code=400, detail="Error validación")
+            raise HTTPException(status_code=400, detail="Cantidad insuficiente para completar la operación")
         
         sentencia = text("""
             INSERT INTO detalle_salvamento(
@@ -103,7 +103,7 @@ def update_detalle_salvamento_by_id(db: Session, detalle_id: int, detalle: Detal
             if not  salvamento_nuevo:
                 raise HTTPException(status_code=400, detail="Error validación")
             if  salvamento_nuevo["cantidad_gallinas"] < cantidad_nueva:
-                raise HTTPException(status_code=400, detail="Error validación")
+                raise HTTPException(status_code=400, detail="Cantidad insuficiente en este producto")
         else:
             # Si es el mismo producto y aumenta cantidad, validar cantidad
             diferencia = cantidad_nueva - cantidad_ant
